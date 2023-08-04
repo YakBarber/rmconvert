@@ -2,11 +2,13 @@
 
 *Bi-directional reMarkable conversion tooling.*
 
-This repo contains tooling to perform bi-directionl conversion with the [reMarkable tablet](https://remarkable.com)'s notebook file format. 
+This repo contains tooling to perform bi-directionl conversion with the [reMarkable tablet](https://remarkable.com)'s notebook file format, focusing on the *current* version of the format (firmware >3.0, rm lines file format v6). 
 
 The tooling is still very much a work in progress, but is minimally functional for certain conversion operations.
 
 For information on the file format spec, see the [sister repo](https://github.com/YakBarber/remarkable_file_format).
+
+Watch this space for updates. Happy to accept pull requests!
 
 ## Todos
 
