@@ -12,25 +12,25 @@ For information on the file format spec, see the [sister repo](https://github.co
 
 Here are the current progress and targets. This plan will be further refined.
 
-- [~] Implement `nom` parser for all structs
+- [ ] Implement `nom` parser for all structs
     - [x] **Line definition block**: Fully parsable and defined
     - [x] **Layer definition block**: Fully parsable, partially understood
     - [x] **Layer name block**: Fully parsable, partially understood
     - [x] **Layer information block**: Fully parsable, partially understood
     - [x] **Text definition block**: Fully parsable, partially understood
     - [ ] **Frontmatter**: Can be bypassed by seeking
-- [~] SVG writing
+- [ ] SVG writing
     - [x] **Simple lines**
     - [ ] **Dynamic brush types**
     - [ ] **Line width**
     - [ ] **Color**
     - [ ] **Text**
     - [ ] **Templates(?)**
-- [~] SVG reading
+- [ ] SVG reading
     - [x] **Path M command**
     - [x] **Path L command**
     - [x] **Path C command**
-    - [~] **transforms**
+    - [ ] **transforms**
     - [ ] **Circles**
     - [ ] **Rectangles**
     - [ ] **Text**
