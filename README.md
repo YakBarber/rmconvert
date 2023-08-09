@@ -33,11 +33,13 @@ Here are the current progress and targets. This plan will be further refined.
     - [x] **Path L command**
     - [x] **Path C command**
     - [ ] **transforms**
+        - [x] **matrix**
+        - [ ] **???**
     - [ ] **Circles**
     - [ ] **Rectangles**
     - [ ] **Text**
 - [ ] **Non-hacky CLI**: it's jank right now
-- [ ] **Baseline notebook access**: Looks in `~/sshrm`, which expects a sshfs (or copied) `/home/root/.local/share/remarkable/xochitl` directory from your tablet. Currently searches and finds the most recently modified page and automatically loads it.
+- [x] **Baseline notebook access**: Looks in `~/sshrm`, which expects a sshfs (or copied) `/home/root/.local/share/remarkable/xochitl` directory from your tablet. Currently searches and finds the most recently modified page and automatically loads it.
 - [ ] **More flexible notebook access**
 - [ ] **`.metadata` reading/parsing**: currently only used to find modified time
 - [ ] **`.content` reading/parsing**
