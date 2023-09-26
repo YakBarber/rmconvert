@@ -4,11 +4,11 @@ use serde_json as json;
 
 use std::io;
 use std::fs;
-use std::path::{Path,PathBuf};
+use std::path::PathBuf;
 //use std::time::{SystemTime, Duration, UNIX_EPOCH};
 
 
-pub fn last_modified_notebook(root_dir: &Path) -> io::Result<PathBuf> {
+pub fn last_modified_notebook(root_dir: &PathBuf) -> io::Result<PathBuf> {
     
     let mut last = (0, PathBuf::new());
 
@@ -43,7 +43,7 @@ pub fn last_modified_notebook(root_dir: &Path) -> io::Result<PathBuf> {
 }
 
 
-pub fn last_modified_page(root_dir: &Path) -> io::Result<PathBuf> {
+pub fn last_modified_page(root_dir: &PathBuf) -> io::Result<PathBuf> {
 
     let last_notebook = last_modified_notebook(root_dir)?;
     let notebook_uuid = last_notebook.file_stem().unwrap();
@@ -87,6 +87,7 @@ pub fn last_modified_page(root_dir: &Path) -> io::Result<PathBuf> {
         dbg!("num");
     };
     
+    dbg!(&out);
     Ok(out)
 }
 
