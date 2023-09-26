@@ -1,8 +1,8 @@
 {
     "cPages": {
         "lastOpened": {
-            "timestamp": "1:24",
-            "value": "3a9e640a-eca5-4b6f-a961-794fc47260d9"
+            "timestamp": "1:25",
+            "value": "9e0bdc4b-14cd-4d25-abb9-3ffd58d5a66e"
         },
         "original": {
             "timestamp": "0:0",
@@ -156,15 +156,15 @@
                     "value": "bm"
                 },
                 "scrollTime": {
-                    "timestamp": "1:4",
-                    "value": "2023-07-24T22:23:49Z"
+                    "timestamp": "1:8",
+                    "value": "2023-07-28T18:18:08Z"
                 },
                 "template": {
                     "timestamp": "1:1",
                     "value": "P Dots S"
                 },
                 "verticalScroll": {
-                    "timestamp": "1:4",
+                    "timestamp": "1:8",
                     "value": 1873
                 }
             },
@@ -244,6 +244,17 @@
                     "timestamp": "1:1",
                     "value": "P Dots S"
                 }
+            },
+            {
+                "id": "9e0bdc4b-14cd-4d25-abb9-3ffd58d5a66e",
+                "idx": {
+                    "timestamp": "1:1",
+                    "value": "bu"
+                },
+                "template": {
+                    "timestamp": "1:1",
+                    "value": "P Dots S"
+                }
             }
         ],
         "uuids": [
@@ -285,7 +296,7 @@
         "LastSelectionToolSize": "2",
         "LastSharpPencilv2Color": "Black",
         "LastSharpPencilv2Size": "2",
-        "LastTool": "SelectionTool"
+        "LastTool": "Finelinerv2"
     },
     "fileType": "notebook",
     "fontName": "",
@@ -293,10 +304,10 @@
     "lineHeight": -1,
     "margins": 125,
     "orientation": "portrait",
-    "pageCount": 20,
+    "pageCount": 21,
     "pageTags": [
     ],
-    "sizeInBytes": "192491",
+    "sizeInBytes": "203547",
     "tags": [
     ],
     "textAlignment": "justify",
