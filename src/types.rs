@@ -94,7 +94,7 @@ pub struct LayerInfo {
 
 #[derive(Debug)]
 pub struct TextDef {
-    pub field_0: IdField,
+    pub id_field_0: IdField,
     pub texts: Vec<TextChunk>,
     pub backmatter: Vec<TextBackmatter>,
     pub unknown_sized: String,
@@ -113,9 +113,9 @@ pub struct TextChunk {
 
 #[derive(Debug)]
 pub struct TextBackmatter {
-    pub field_0: IdField,
-    pub field_1: IdField,
-    pub field_2: IdField,
+    pub id_field_0: IdField,
+    pub id_field_1: IdField,
+    pub id_field_2: IdField,
 }
 
 #[derive(Debug)]
@@ -139,7 +139,7 @@ impl <'a> std::fmt::Display for Block<'a> {
                 write!(f, "Block::LayerDef: id {:?}", layer.layer_id)
             },
             Block::TextDef(text) => {
-                write!(f, "Block::TextDef: id {:?}", text.field_0)
+                write!(f, "Block::TextDef: id {:?}", text.id_field_0)
             },
             Block::LayerName(name) => {
                 write!(f, "Block::LayerName: id {:?}, name '{}'", name.layer_id, name.name)

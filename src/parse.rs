@@ -100,10 +100,9 @@ pub fn parse_text_backmatter(input: &[u8]) -> IResult<&[u8], TextBackmatter> {
             ),
         )(input)?;
     Ok((input, TextBackmatter {
-        field_0: backmatter.0.try_into().unwrap(),
-        field_1: backmatter.1.try_into().unwrap(),
-        field_2: backmatter.2.try_into().unwrap(),
-
+        id_field_0: backmatter.0.try_into().unwrap(),
+        id_field_1: backmatter.1.try_into().unwrap(),
+        id_field_2: backmatter.2.try_into().unwrap(),
     }))
 }
 
@@ -126,10 +125,10 @@ pub fn parse_text_def(input: &[u8]) -> IResult<&[u8], TextDef> {
     ));
 
     let (input, output) = parsers(input)?;
-    let (field_0,_,_,_,texts,backmatter,unknown_sized,unknown_unsized) = output;
+    let (id_field_0,_,_,_,texts,backmatter,unknown_sized,unknown_unsized) = output;
 
     Ok((input, TextDef {
-        field_0: field_0.try_into().unwrap(),
+        id_field_0: id_field_0.try_into().unwrap(),
         texts,
         backmatter,
         unknown_sized: unknown_sized.to_hex(unknown_sized.len()),
