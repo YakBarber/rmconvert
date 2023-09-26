@@ -1,4 +1,6 @@
 
+use std::io::Write;
+
 use svg::Document;
 use svg::node::element::Path;
 use svg::node::element::path::{Command, Data, Position, Parameters};
@@ -59,7 +61,7 @@ pub fn create_border_path() -> Path {
         .set("d", data)
 }
 
-pub fn write_svg<I>(paths: I, filepath: &str) -> std::io::Result<()> 
+fn prepare_svg<I>(paths: I) -> Document
     where I: IntoIterator<Item=Path>
 {
     let margin = 0.0; //50.0;
@@ -69,14 +71,38 @@ pub fn write_svg<I>(paths: I, filepath: &str) -> std::io::Result<()>
     for p in paths {
         document = document.add(p);
     };
+    document
+}
+
+pub fn write_svg<I, T>(paths: I, filepath: T) -> std::io::Result<()> 
+    where I: IntoIterator<Item=Path>,
+          T: AsRef<std::path::Path>,
+{
+    let document = prepare_svg(paths);
 
     svg::save(filepath, &document)
 }
 
 
-pub fn read_svg(start_id: IdField, filepath: &str) -> std::io::Result<Vec<Line>> {
-    let mut content = String::new();
 
+/// Read an SVG file into a reMarkable-style struct (rmconvert::types::Line).
+///
+/// TODO: make this interface better
+pub fn read_svg_file<P: AsRef<std::path::Path>>(filepath: P) -> std::io::Result<Vec<Line>> {
+    let mut content = String::new();
+    let events = svg::open(filepath, &mut content)?;
+    parse_svg_to_lines(events, IdField([0x00,0x00,0x00]), IdField([0x00,0x00,0x00]))
+}
+
+pub fn read_svg_buffer<'a>(svg_buf: &str) -> std::io::Result<Vec<Line>> {
+    let events = svg::read(svg_buf)?;
+    parse_svg_to_lines(events, IdField([0x00,0x00,0x00]), IdField([0x00,0x00,0x00]))
+    
+}
+
+fn parse_svg_to_lines<'a, I, E>(svg_events: I, start_id: IdField, prev_id: IdField) -> Result<Vec<Line>, E> 
+    where I: IntoIterator<Item=Event<'a>>,
+{
     let base_line = Line {
         layer_id: IdField([0x00, 0x0b, 0x00]), 
         line_id: IdField([0x00, 0x00, 0x00]),
@@ -90,10 +116,10 @@ pub fn read_svg(start_id: IdField, filepath: &str) -> std::io::Result<Vec<Line>>
 
     let mut curr_position: (f32, f32) = (0.0, 0.0);
     let mut curr_id = start_id;
-    let mut last_id = IdField([0x00, 0x00, 0x00]);
+    let mut last_id = prev_id;
     let mut lines: Vec<Line> = Vec::new(); //my Line, not svg::_::Line
 
-    for event in svg::open(filepath, &mut content).unwrap() {
+    for event in svg_events {
         match event {
             Event::Tag(tag, _, attributes) => {
                 if tag!="path" {
