@@ -83,6 +83,13 @@ pub fn write_svg<I, T>(paths: I, filepath: T) -> std::io::Result<()>
     svg::save(filepath, &document)
 }
 
+pub fn write_svg_to_stdout<I>(paths: I) -> std::io::Result<()> 
+    where I: IntoIterator<Item=Path>
+{
+    let document = prepare_svg(paths);
+    let out_bytes = document.to_string().into_bytes();
+    std::io::stdout().write_all(&out_bytes)
+}
 
 
 /// Read an SVG file into a reMarkable-style struct (rmconvert::types::Line).
