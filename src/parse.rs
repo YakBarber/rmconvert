@@ -166,11 +166,13 @@ pub fn parse_block(input: &[u8]) -> IResult<&[u8], Block> {
 
 pub fn pad_id_field(field: &[u8]) -> IdField {
     let vfield = {
-        if field.len() == 2 {
+        if field.len() == 1 {
+            let v = [field.to_owned(), vec!(0), vec!(0)].concat();
+            v
+        } else if field.len() == 2 {
             let v = [field.to_owned(), vec!(0)].concat();
             v
-        } else
-        {
+        } else {
             field.to_owned()
             
         }
