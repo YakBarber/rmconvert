@@ -38,6 +38,16 @@ Here are the current progress and targets. This plan will be further refined.
     - [ ] **Circles**
     - [ ] **Rectangles**
     - [ ] **Text**
+
+
+- [ ] Extraction
+    - [ ] Lines to internal structs
+    - [ ] Text to internal structs
+    - [ ] Output JSON
+- [ ] Creation
+- [ ] Insertion
+
+
 - [ ] **Non-hacky CLI**: it's jank right now
 - [x] **Baseline notebook access**: Looks in `~/sshrm`, which expects a sshfs (or copied) `/home/root/.local/share/remarkable/xochitl` directory from your tablet. Currently searches and finds the most recently modified page and automatically loads it.
 - [ ] **More flexible notebook access**
