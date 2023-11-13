@@ -1,7 +1,7 @@
 
 use std::path::PathBuf;
 
-use clap::{Args, Subcommand, Parser};
+use clap::{Args, Subcommand, Parser, ValueEnum};
 
 use clio::{Input, Output};
 
@@ -16,6 +16,15 @@ pub enum Commands {
     
     /// Insert line data into an *existing* reMarkable file
     Insert(InsertArgs),
+}
+
+#[derive(Debug, Subcommand, Clone, ValueEnum)]
+pub enum OutputFormat {
+    Human,
+    JSON,
+    SVG,
+    Raw,
+    Bytes,
 }
 
 #[derive(Debug, Args)]
@@ -35,6 +44,9 @@ pub struct ExtractArgs {
     #[clap(value_parser)]
     #[arg(short,long, group = "inargs")]
     pub last: bool,
+
+    #[arg(short='t', long, default_value="human")]
+    pub format: OutputFormat,
 }
 
 #[derive(Debug, Args)]
