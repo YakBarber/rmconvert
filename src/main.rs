@@ -46,7 +46,7 @@ fn file_to_svg_paths<R: Read>(mut rmpath: R) -> Vec<Path> {
 
 // TODO: use stdin? Does it even make sense here?
 // TODO: Return a Result<()>?
-fn do_extract(ExtractArgs { input, output, last }: ExtractArgs, rmdir: Option<PathBuf>) {
+fn do_extract(ExtractArgs { input, output, last, format: _format }: ExtractArgs, rmdir: Option<PathBuf>) {
 
     let svg_paths: Vec<Path> = match (input, last) {
 
