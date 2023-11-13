@@ -9,6 +9,8 @@ use nom::HexDisplay;
 pub struct IdField(pub [u8;3]);
 
 impl IdField {
+    /// This is almost defninitely not accurate to what the tablet does,
+    /// but seems to work well enough.
     pub fn inc(&mut self, pos: usize) {
         if self.0[pos] >= 128{
             if pos == 0 {
