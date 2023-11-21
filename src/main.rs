@@ -17,16 +17,18 @@ use svg::node::element::Path;
 use clap::Parser;
 use clio::{Input, Output};
 
+use log::warn;
 
-/// Convert a reMarkable file into Blocks, then into SVG paths, and return the Vec<Path>.
+
+fn extract_from_blocks(ExtractArgs {skip_text, skip_lines, .. }: ExtractArgs, blocks: Vec<Block>) -> (Option<Vec<Path>>, Option<Vec<String>>) {
+
+    (None, None)
+}
+
+/// Convert Blocks into SVG paths, and return the Vec<Path>.
 ///
 /// Path creation is very simplistic, and not all Block types are supported.
-fn file_to_svg_paths<R: Read>(mut rmpath: R) -> Vec<Path> {
-    //let bytes: &[u8] = &read(&rmpath).unwrap();
-    let mut bytes: Vec<u8> = Vec::new();
-    rmpath.read_to_end(&mut bytes).unwrap();
-    let (_input, blocks) = many1(parse_block)(&bytes[163..]).unwrap();
-
+fn blocks_to_svg_paths(blocks: Vec<Block>) -> Vec<Path> {
     let mut paths = Vec::new();
 
     for block in &blocks {
@@ -40,15 +42,40 @@ fn file_to_svg_paths<R: Read>(mut rmpath: R) -> Vec<Path> {
             };
         };
     };
+
+    warn!("SVG path extraction ignores text");
     paths
 }
 
+fn file_to_blocks<R: Read>(mut rmpath: R) -> Vec<Block> {
+    let mut bytes: Vec<u8> = Vec::new();
+    rmpath.read_to_end(&mut bytes).unwrap();
+    let (_input, blocks) = many1(parse_block)(&bytes[163..]).unwrap();
+
+    blocks
+}
+
+fn blocks_to_text(blocks: Vec<Block>) -> Vec<String> {
+
+    let mut strings = Vec::new();
+
+    for block in &blocks {
+        if let Block::TextDef(tdef) = block {
+            for chunk in &tdef.texts {
+                strings.push(chunk.text.clone());
+            };
+        };
+    };
+
+    warn!("Text extraction ignores text formatting");
+    strings
+}
 
 // TODO: use stdin? Does it even make sense here?
 // TODO: Return a Result<()>?
-fn do_extract(ExtractArgs { input, output, last, format: _format }: ExtractArgs, rmdir: Option<PathBuf>) {
+fn do_extract(ExtractArgs { input, output, last, format: _format, skip_lines, skip_text }: ExtractArgs, rmdir: Option<PathBuf>) {
 
-    let svg_paths: Vec<Path> = match (input, last) {
+    let blocks: Vec<Block> = match (input, last) {
 
         // no input or last-modified flag; panic
         (None, false) => {
@@ -59,7 +86,7 @@ fn do_extract(ExtractArgs { input, output, last, format: _format }: ExtractArgs,
             if let Some(dir) = rmdir {
                 let lastf = last_modified_page(&dir).unwrap();
                 let cliopath = Input::new(&lastf).unwrap();
-                file_to_svg_paths(cliopath)
+                file_to_blocks(cliopath)
             } else {
                 panic!("no rmdir to use!");
             }
@@ -67,20 +94,41 @@ fn do_extract(ExtractArgs { input, output, last, format: _format }: ExtractArgs,
         // use input, ignore last flag with msg
         (Some(inp), true) => {
             eprintln!("Both --input and --last were given; ignoring --last...");
-            file_to_svg_paths(inp)
+            file_to_blocks(inp)
         },
         // use input
         (Some(inp), false) => {
-            file_to_svg_paths(inp)
+            file_to_blocks(inp)
         },
     };
 
-    if let Some(out) = output {
-        //svg_paths.push(create_border_path());
-        write_svg(svg_paths, out.to_string()).unwrap();
-    } else {
-        write_svg_to_stdout(svg_paths).unwrap();
+
+    if !skip_lines {
+        let svg_paths = blocks_to_svg_paths(blocks.clone());
+
+        if let Some(out) = output.clone() {
+            //svg_paths.push(create_border_path());
+            write_svg(svg_paths, out.to_string()).unwrap();
+        } else {
+            write_svg_to_stdout(svg_paths).unwrap();
+        };
     };
+
+    if !skip_text {
+        let text = blocks_to_text(blocks.clone());
+
+        if let Some(out) = output.clone() {
+            todo!("Can't write text to files yet");
+        } else {
+            warn!("assuming ASCII...");
+
+            for line in &text {
+                let bytes = line.clone().into_bytes().into_boxed_slice();
+                std::io::stdout().write_all(&bytes).unwrap();
+            };
+        };
+    };
+
 }
 
 // TODO: Return a Result<()>?
@@ -161,6 +209,8 @@ fn do_create(CreateArgs { input, output, last, force }: CreateArgs, rmdir: Optio
 }
 
 fn main() {
+
+    env_logger::init();
 
     let ui = Cli::parse_with_env();
 

@@ -32,21 +32,27 @@ pub struct ExtractArgs {
 
     /// reMarkable file to extract from.
     #[clap(value_parser)]
-    #[arg(short,long, group = "inargs")]
+    #[arg(short, long, group = "inargs")]
     pub input: Option<Input>,
 
     /// SVG file to extract into. If none is given, dump SVG to STDOUT.
     #[clap(value_parser)]
-    #[arg(short,long)]
+    #[arg(short, long)]
     pub output: Option<Output>,
     
     /// Attempt to read from the last opened reMarkable page file (slow)
     #[clap(value_parser)]
-    #[arg(short,long, group = "inargs")]
+    #[arg(short, long, group = "inargs")]
     pub last: bool,
 
     #[arg(short='t', long, default_value="human")]
     pub format: OutputFormat,
+
+    #[arg(short='x', long)]
+    pub skip_text: bool,
+
+    #[arg(short='X', long)]
+    pub skip_lines: bool,
 }
 
 #[derive(Debug, Args)]
