@@ -79,14 +79,14 @@ pub struct Point {
     pub pressure: u8,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct LayerDef {
     pub layer_id: IdField,
     pub unknown_1: Vec<u8>, //4 bytes
     pub unknown_2: Vec<u8>, //?? bytes
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct LayerName {
     pub layer_id: IdField,
     pub id_field_0: IdField,
@@ -94,7 +94,7 @@ pub struct LayerName {
     pub unknown_rest: Vec<u8>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct LayerInfo {
     pub id_field_0: IdField,
     pub id_field_1: IdField,
@@ -103,7 +103,7 @@ pub struct LayerInfo {
     pub layer_id: Option<IdField>
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct TextDef {
     pub id_field_0: IdField,
     pub texts: Vec<TextChunk>,
@@ -112,7 +112,7 @@ pub struct TextDef {
     pub unknown_unsized: String,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct TextChunk {
     pub chunk_id: [u8;3],  //sometimes it's 3
     pub other_chunk_id_0: [u8;3], //sometimes it's 3
@@ -122,24 +122,25 @@ pub struct TextChunk {
     pub magic_dollar: Option<u32>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct TextBackmatter {
     pub id_field_0: IdField,
     pub id_field_1: IdField,
     pub id_field_2: IdField,
 }
 
-#[derive(Debug)]
-pub enum Block<'a>{
+#[derive(Debug, Clone)]
+pub enum Block{
     Line(Line),
     LayerDef(LayerDef),
     TextDef(TextDef),
     LayerName(LayerName),
     LayerInfo(LayerInfo),
-    Unknown(&'a [u8], &'a [u8]),
+    Unknown(Vec<u8>, Vec<u8>),
+}
 }
 
-impl <'a> std::fmt::Display for Block<'a> {
+impl <'a> std::fmt::Display for Block {
     // This trait requires `fmt` with this exact signature.
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         match self {
@@ -165,7 +166,7 @@ impl <'a> std::fmt::Display for Block<'a> {
     }
 }
 
-impl From<Block<'_>> for RawBytes {
+impl From<Block> for RawBytes {
     fn from(value: Block) -> Self {
         match value {
             Block::Line(l) => {
