@@ -361,7 +361,26 @@ mod test {
 
     use nom::multi::many1;
     use std::fs::read;
+    use std::path::PathBuf;
 
+    fn init() {
+        let _ = env_logger::builder().is_test(true).try_init();
+    }
+
+    #[test]
+    fn can_parse_all() {
+        init();
+        let mut assets = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        assets.push("assets/213001cb-42c0-4628-8ed0-8320c15da2a8");
+        for entry in assets.read_dir().expect("can't read assets!") {
+            if let Ok(file) = entry {
+                if file.path().extension().unwrap() == clap::builder::OsStr::from("rm") {
+                    let bytes: &[u8] = &read(file.path()).unwrap();
+                    let (_, _blocks) = many1(parse_block)(&bytes[163..]).unwrap();
+                };
+            };
+        };
+    }
 
     #[test]
     fn get_version() {
