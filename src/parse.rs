@@ -36,19 +36,13 @@ pub fn parse_text_chunk(input: &[u8]) -> IResult<&[u8], TextChunk> {
 
     let mut chunk = TextChunk{
         chunk_id: {
-            let mut arr = [0;3];
-            arr.copy_from_slice(&chunk_id);
-            arr
+            pad_id_field(chunk_id)
         },
         other_chunk_id_0: {
-            let mut arr = [0;3];
-            arr.copy_from_slice(&other_chunk_id_0);
-            arr
+            pad_id_field(other_chunk_id_0)
         },
         other_chunk_id_1: {
-            let mut arr = [0;3];
-            arr.copy_from_slice(&other_chunk_id_1);
-            arr
+            pad_id_field(other_chunk_id_1)
         },
         done_flag,
         text: String::new(),
@@ -100,9 +94,9 @@ pub fn parse_text_backmatter(input: &[u8]) -> IResult<&[u8], TextBackmatter> {
             ),
         )(input)?;
     Ok((input, TextBackmatter {
-        id_field_0: backmatter.0.try_into().unwrap(),
-        id_field_1: backmatter.1.try_into().unwrap(),
-        id_field_2: backmatter.2.try_into().unwrap(),
+        id_field_0: pad_id_field(backmatter.0).try_into().unwrap(),
+        id_field_1: pad_id_field(backmatter.1).try_into().unwrap(),
+        id_field_2: pad_id_field(backmatter.2).try_into().unwrap(),
     }))
 }
 
@@ -159,7 +153,7 @@ pub fn parse_block(input: &[u8]) -> IResult<&[u8], Block> {
             parse_line(&body).map(|(_,l)| (input,Block::Line(l)))
         },
         _          => {
-            Ok((input, Block::Unknown(&flag, &body)))
+            Ok((input, Block::Unknown(flag.to_vec(), body.to_vec())))
         },
     }
 }

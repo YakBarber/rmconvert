@@ -114,9 +114,9 @@ pub struct TextDef {
 
 #[derive(Debug, Clone)]
 pub struct TextChunk {
-    pub chunk_id: [u8;3],  //sometimes it's 3
-    pub other_chunk_id_0: [u8;3], //sometimes it's 3
-    pub other_chunk_id_1: [u8;3], //sometimes it's 3
+    pub chunk_id: IdField,
+    pub other_chunk_id_0: IdField,
+    pub other_chunk_id_1: IdField,
     pub done_flag: u32,
     pub text: String,
     pub magic_dollar: Option<u32>,
