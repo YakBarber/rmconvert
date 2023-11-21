@@ -4,6 +4,15 @@ use std::vec::Vec;
 use std::primitive::{u8,u32,f32};
 
 use nom::HexDisplay;
+use thiserror;
+
+#[derive(thiserror::Error, Debug)]
+pub enum Error <'a> {
+    #[error("Can't parse: {}", .0.to_hex(.1.clone()))]
+    ParseError(&'a [u8], usize),
+    #[error("Something bad happened")]
+    OtherError,
+}
 
 #[derive(Debug, Clone)]
 pub struct IdField(pub [u8;3]);
