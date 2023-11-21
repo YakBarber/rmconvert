@@ -138,6 +138,30 @@ pub enum Block{
     LayerInfo(LayerInfo),
     Unknown(Vec<u8>, Vec<u8>),
 }
+
+impl TextChunk {
+    pub fn to_markdown(&self) -> String {
+        match self.magic_dollar {
+            None => {
+                todo!()
+            },
+            Some(4) => {
+                todo!()
+            },
+            _ => {
+                todo!()
+            },
+        }
+
+    }
+
+    pub fn to_svg(&self) -> String {
+        todo!()
+    }
+
+    pub fn to_raw_text(&self) -> String {
+        self.text.clone()
+    }
 }
 
 impl <'a> std::fmt::Display for Block {
