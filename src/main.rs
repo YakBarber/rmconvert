@@ -50,7 +50,7 @@ fn blocks_to_svg_paths(blocks: Vec<Block>) -> Vec<Path> {
 fn file_to_blocks<R: Read>(mut rmpath: R) -> Vec<Block> {
     let mut bytes: Vec<u8> = Vec::new();
     rmpath.read_to_end(&mut bytes).unwrap();
-    let (_input, blocks) = many1(parse_block)(&bytes[163..]).unwrap();
+    let (_input, (_fm, blocks)) = parse_full(&bytes).unwrap();
 
     blocks
 }

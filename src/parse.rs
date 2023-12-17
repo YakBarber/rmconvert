@@ -1,10 +1,11 @@
 
+use std::str::from_utf8;
 
 use nom::{IResult, HexDisplay};
-use nom::bytes::complete as bytes;
-use nom::character::complete as char;
+use nom::bytes::complete::{self as bytes, tag, take};
+use nom::character::complete as cchar;
 use nom::number::complete as num;
-use nom::sequence::preceded;
+use nom::sequence::{preceded, delimited};
 use nom::multi::{length_value, length_data, length_count, many0, count};
 use nom::combinator::map as pmap;
 
@@ -12,6 +13,28 @@ use super::types::*;
 
 pub const TEST_FILE_01: &str = "assets/213001cb-42c0-4628-8ed0-8320c15da2a8/110b4d92-e42e-4b78-a0cb-ebd40862f2f0.rm";
 pub const TEST_FILE_02: &str = "assets/213001cb-42c0-4628-8ed0-8320c15da2a8/9e0bdc4b-14cd-4d25-abb9-3ffd58d5a66e.rm";
+
+
+pub fn parse_full(input: &[u8]) -> IResult<&[u8], (Frontmatter, Vec<Block>)> {
+    let (input, fm) = parse_frontmatter(input)?;
+    let (rest, blocks) = many0(parse_block)(input)?;
+    Ok((rest, (fm, blocks)))
+}
+
+pub fn parse_frontmatter(input: &[u8]) -> IResult<&[u8], Frontmatter> {
+
+    // TODO magic 163 is the frontmatter for now...
+    let (rest, input) = take(163 as usize)(input)?;
+
+    let (input, ver_u8) = delimited(
+                             tag("reMarkable .lines file, version="),
+                             cchar::digit1,
+                             tag("          "),
+                          )(input)?;
+    let ver_str = from_utf8(ver_u8).unwrap(); //shouldn't fail if nom doesn't
+    let ver = ver_str.parse::<u8>().unwrap(); //same
+    Ok((rest, (Frontmatter{version: ver, unknown: input.to_owned()})))
+}
 
 pub fn parse_block(input: &[u8]) -> IResult<&[u8], Block> {
     let (input, len) = num::le_u32(input)?;
