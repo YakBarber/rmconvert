@@ -8,7 +8,7 @@ use clio::{Input, Output};
 
 #[derive(Debug, Subcommand)]
 pub enum Commands {
-    /// Extract a single reMarkable page file to SVG.
+    /// Extract a single reMarkable page-file to SVG.
     Extract(ExtractArgs),
 
     /// Create a new reMarkable file and add line data to it

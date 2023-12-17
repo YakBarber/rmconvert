@@ -55,6 +55,10 @@ fn file_to_blocks<R: Read>(mut rmpath: R) -> Vec<Block> {
     blocks
 }
 
+/// Convert Blocks into Text, and return the Vec<String>.
+///
+/// Text extraction currently ignores all formatting information, and all
+/// non-Text Blocks.
 fn blocks_to_text(blocks: Vec<Block>) -> Vec<String> {
 
     let mut strings = Vec::new();
