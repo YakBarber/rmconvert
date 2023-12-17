@@ -42,16 +42,6 @@ impl IdField {
 pub type RawBytes = Vec<u8>;
 
 #[derive(Debug)]
-pub struct Notebook {
-    pub frontmatter: Frontmatter,
-    pub layer_def: LayerDef,
-    pub layer_name: LayerName,
-    pub text_def: TextDef,
-    pub layer_info: LayerInfo,
-    pub lines: Vec<Line>,
-}
-
-#[derive(Debug)]
 pub struct Frontmatter {
     pub version: u8,
     pub unknown: Vec<u8>,
