@@ -386,7 +386,6 @@ mod test {
     use super::*;
     //use crate::util::*;
 
-    use nom::multi::many1;
     use std::fs::read;
     use std::path::PathBuf;
 
@@ -403,7 +402,7 @@ mod test {
             if let Ok(file) = entry {
                 if file.path().extension().unwrap() == clap::builder::OsStr::from("rm") {
                     let bytes: &[u8] = &read(file.path()).unwrap();
-                    let (_, _blocks) = many1(parse_block)(&bytes[163..]).unwrap();
+                    let (_, (_fm, _blocks)) = parse_full(&bytes).unwrap();
                 };
             };
         };
@@ -435,7 +434,7 @@ mod test {
     #[test]
     fn get_all_blocks() {
         let bytes: &[u8] = &read(TEST_FILE_01).unwrap();
-        let (_, blocks) = many1(parse_block)(&bytes[163..]).unwrap();
+        let (_, (_fm, blocks)) = parse_full(&bytes).unwrap();
 
         assert_eq!(12, blocks.len());
     }
