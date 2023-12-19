@@ -47,12 +47,12 @@ fn blocks_to_svg_paths(blocks: Vec<Block>) -> Vec<Path> {
     paths
 }
 
-fn file_to_blocks<R: Read>(mut rmpath: R) -> Vec<Block> {
+fn file_to_blocks<R: Read>(mut rmpath: R) -> (Frontmatter, Vec<Block>) {
     let mut bytes: Vec<u8> = Vec::new();
     rmpath.read_to_end(&mut bytes).unwrap();
-    let (_input, (_fm, blocks)) = parse_full(&bytes).unwrap();
+    let (_input, (fm, blocks)) = parse_full(&bytes).unwrap();
 
-    blocks
+    (fm, blocks)
 }
 
 /// Convert Blocks into Text, and return the Vec<String>.
@@ -77,6 +77,7 @@ fn blocks_to_text(blocks: Vec<Block>) -> Vec<String> {
 
 // TODO: use stdin? Does it even make sense here?
 // TODO: Return a Result<()>?
+// TODO: make the panics reprint the --help text
 fn do_extract(ExtractArgs { input, output, last, format: _format, skip_lines, skip_text }: ExtractArgs, rmdir: Option<PathBuf>) {
 
     let blocks: Vec<Block> = match (input, last) {
@@ -90,7 +91,7 @@ fn do_extract(ExtractArgs { input, output, last, format: _format, skip_lines, sk
             if let Some(dir) = rmdir {
                 let lastf = last_modified_page(&dir).unwrap();
                 let cliopath = Input::new(&lastf).unwrap();
-                file_to_blocks(cliopath)
+                file_to_blocks(cliopath).1
             } else {
                 panic!("no rmdir to use!");
             }
@@ -98,11 +99,11 @@ fn do_extract(ExtractArgs { input, output, last, format: _format, skip_lines, sk
         // use input, ignore last flag with msg
         (Some(inp), true) => {
             eprintln!("Both --input and --last were given; ignoring --last...");
-            file_to_blocks(inp)
+            file_to_blocks(inp).1
         },
         // use input
         (Some(inp), false) => {
-            file_to_blocks(inp)
+            file_to_blocks(inp).1
         },
     };
 
@@ -212,6 +213,64 @@ fn do_create(CreateArgs { input, output, last, force }: CreateArgs, rmdir: Optio
     };
 }
 
+#[allow(unused_variables, unused_mut)]
+fn file_to_stats<R: Read>(mut rmpath: R) {
+    
+    let (fm, blocks) = file_to_blocks(rmpath);
+
+    let mut num_blocks = blocks.len();
+    let mut num_lines = 0;
+    let mut num_points = 0;
+    let mut num_layer_defs = 0;
+    let mut num_layer_names = 0;
+    let mut num_layer_infos = 0;
+    let mut num_text = 0;
+    let mut num_text_chunks = 0;
+    let mut num_text_backs = 0;
+    let mut all_text: Vec<TextDef> = Vec::new();
+
+    for block in &blocks {
+        num_blocks = num_blocks + 1;
+
+        match block {
+            Block::Line(line) => {
+                num_lines = num_lines + 1;
+                num_points = num_points + line.points.len();
+            },
+            Block::LayerDef(layer) => {
+                num_layer_defs = num_layer_defs + 1;
+            },
+            Block::TextDef(text) => {
+                num_text = num_text + 1;
+                num_text_chunks = num_text_chunks + text.texts.len();
+                num_text_backs = num_text_backs + text.backmatter.len();
+                all_text.push(text.clone());
+            },
+            Block::LayerName(name) => {
+                num_layer_names = num_layer_names + 1;
+            },
+            Block::LayerInfo(info) => {
+                num_layer_infos = num_layer_infos + 1;
+            },
+            Block::Unknown(flag, raw) => {
+            },
+        };
+    };
+
+    // ultimately this needs to be more flexible/useful obviously
+    println!("Version: {:?}", fm.version);
+    println!("Total Blocks: {}", num_blocks);
+    println!("Total Lines: {}", num_lines);
+    println!("Total Points in those lines: {}", num_points);
+    println!("Total Layer Defs: {}", num_layer_defs);
+    println!("Total Layer Names: {}", num_layer_names);
+    println!("Total Layer Infos: {}", num_layer_infos);
+    println!("Total Text Objects: {}", num_text);
+    println!("Total Text Chunks: {}", num_text_chunks);
+    println!("Total Text Backmatter: {}", num_text_chunks);
+    println!("The Texts: {:?}", all_text);
+}
+
 fn main() {
 
     env_logger::init();
@@ -226,6 +285,24 @@ fn main() {
             do_extract(e_args, ui.remarkable_dir);
         },
         Commands::Insert(_iargs) => {
+
+        },
+        Commands::Stats(_sargs) => {
+            if _sargs.last {
+                let lastf = last_modified_page(&ui.remarkable_dir.unwrap()).unwrap();
+                let cliopath = Input::new(&lastf).unwrap();
+                file_to_stats(cliopath);
+            }
+            else {
+                match &_sargs.input {
+                    Some(file) => {
+                        file_to_stats(file.clone());
+                    },
+                    None => {
+                    },
+                };
+            };
+            file_to_stats(_sargs.input.unwrap());
 
         },
     };

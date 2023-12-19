@@ -16,6 +16,9 @@ pub enum Commands {
     
     /// Insert line data into an *existing* reMarkable file
     Insert(InsertArgs),
+
+    /// Read a reMarkable file and structure and content info
+    Stats(StatsArgs),
 }
 
 #[derive(Debug, Subcommand, Clone, ValueEnum)]
@@ -25,6 +28,19 @@ pub enum OutputFormat {
     SVG,
     Raw,
     Bytes,
+}
+
+#[derive(Debug, Args)]
+pub struct StatsArgs {
+    /// reMarkable file to read
+    #[clap(value_parser)]
+    #[arg(short, long, group = "inargs")]
+    pub input: Option<Input>,
+    
+    /// Attempt to read from the last opened reMarkable page file (slow)
+    #[clap(value_parser)]
+    #[arg(short, long, group = "inargs")]
+    pub last: bool,
 }
 
 #[derive(Debug, Args)]
