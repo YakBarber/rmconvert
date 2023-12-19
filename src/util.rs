@@ -30,8 +30,7 @@ fn sort_dir_entries(dir: &PathBuf) -> io::Result<Vec<PathBuf>> {
     sortee.sort_unstable_by_key(|e| e.0);
     sortee.reverse();
 
-    let out: Vec<PathBuf> = sortee.iter().map(|p| p.1.clone()).collect();
-    Ok(out)
+    Ok(sortee.iter().map(|p| p.1.clone()).collect())
 }
 
 pub fn last_modified_notebook(root_dir: &PathBuf) -> io::Result<PathBuf> {
