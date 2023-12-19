@@ -7,36 +7,64 @@ use std::fs;
 use std::path::PathBuf;
 //use std::time::{SystemTime, Duration, UNIX_EPOCH};
 
+fn sort_dir_entries(dir: &PathBuf) -> io::Result<Vec<PathBuf>> {
+    let mut sortee: Vec<(std::time::SystemTime, PathBuf)> = Vec::new();
+
+    for entry in fs::read_dir(dir)? {
+        let entry = entry?;
+        let path = entry.path();
+        match entry.path().extension() {
+            None => continue,
+            Some(ext) => {
+                // the extension's being .metadata is not related to me asking
+                // for the file's metadata() here.
+                if ext=="metadata" {
+                    let md = path.metadata()?;
+                    let time = md.modified()?;
+                    sortee.push((time, path));
+                };
+            },
+        };
+    };
+
+    sortee.sort_unstable_by_key(|e| e.0);
+    sortee.reverse();
+
+    let out: Vec<PathBuf> = sortee.iter().map(|p| p.1.clone()).collect();
+    Ok(out)
+}
 
 pub fn last_modified_notebook(root_dir: &PathBuf) -> io::Result<PathBuf> {
     
     let mut last = (0, PathBuf::new());
 
     if root_dir.is_dir() {
-        for entry in fs::read_dir(root_dir)? {
-            let entry = entry?;
-            let path = entry.path();
-            match entry.path().extension() {
+        let mut sorted = sort_dir_entries(root_dir)?;
+        sorted.truncate(10);
+        for entry in sorted {
+            match entry.extension() {
                 None => continue,
-                Some(ext) => {
-                    if ext == "metadata" {
-                        let j: json::Value = json::from_reader(fs::File::open(&path)?)?;
+                Some(_ext) => {
+                    // _ext == "metadata"
+                    let j: json::Value = json::from_reader(fs::File::open(&entry)?)?;
 
-                        if let json::Value::String(ts) = &j["lastModified"] {
-                            let this = &ts[..13];
-                            if let Ok(this) = this.parse::<u64>() {
-                                if last.0 > this {
-                                    continue
-                                }
-                                else {
-                                    last = (this,path.clone());
-                                };
+                    if let json::Value::String(ts) = &j["lastModified"] {
+                        let this = &ts[..13];
+                        if let Ok(this) = this.parse::<u64>() {
+                            if last.0 > this {
+                                continue
+                            }
+                            else {
+                                last = (this,entry.clone());
                             };
                         };
                     };
                 },
             };
         };
+    }
+    else {
+        dbg!(root_dir);
     };
 
     Ok(last.1)
