@@ -20,6 +20,7 @@ use clio::{Input, Output};
 use log::warn;
 
 
+#[allow(unused_variables)]
 fn extract_from_blocks(ExtractArgs {skip_text, skip_lines, .. }: ExtractArgs, blocks: Vec<Block>) -> (Option<Vec<Path>>, Option<Vec<String>>) {
 
     (None, None)
@@ -122,7 +123,7 @@ fn do_extract(ExtractArgs { input, output, last, format: _format, skip_lines, sk
     if !skip_text {
         let text = blocks_to_text(blocks.clone());
 
-        if let Some(out) = output.clone() {
+        if let Some(_out) = output.clone() {
             todo!("Can't write text to files yet");
         } else {
             warn!("assuming ASCII...");
@@ -213,6 +214,11 @@ fn do_create(CreateArgs { input, output, last, force }: CreateArgs, rmdir: Optio
     };
 }
 
+#[allow(unused_variables)]
+fn do_insert(InsertArgs { input, output, last, layer }: InsertArgs, rmdir: Option<PathBuf>) {
+    todo!();
+}
+
 #[allow(unused_variables, unused_mut)]
 fn file_to_stats<R: Read>(mut rmpath: R) {
     
@@ -284,17 +290,18 @@ fn main() {
         Commands::Extract(e_args) => {
             do_extract(e_args, ui.remarkable_dir);
         },
-        Commands::Insert(_iargs) => {
+        Commands::Insert(i_args) => {
+            do_insert(i_args, ui.remarkable_dir);
 
         },
-        Commands::Stats(_sargs) => {
-            if _sargs.last {
+        Commands::Stats(s_args) => {
+            if s_args.last {
                 let lastf = last_modified_page(&ui.remarkable_dir.unwrap()).unwrap();
                 let cliopath = Input::new(&lastf).unwrap();
                 file_to_stats(cliopath);
             }
             else {
-                match &_sargs.input {
+                match &s_args.input {
                     Some(file) => {
                         file_to_stats(file.clone());
                     },
@@ -302,127 +309,10 @@ fn main() {
                     },
                 };
             };
-            file_to_stats(_sargs.input.unwrap());
+            file_to_stats(s_args.input.unwrap());
 
         },
     };
 }
-
-
-    //let last = last_modified_page(Path::new("/home/barry/mnt/sshrm/xochitl/")).unwrap();
-    //dbg!(&last);
-
-    //let bytes: &[u8] = &read(&last).unwrap();
-
-    //let mut out = bytes.clone().to_vec();
-
-    //let (_input, blocks) = many1(parse_block)(&bytes[163..]).unwrap();
-
-    //let last_id = 
-    //    match &blocks.last().unwrap() {
-    //        Block::Line(l) => {
-    //            l.line_id.clone()
-    //        },
-    //        _ => {
-    //            IdField([0x00,0x00,0x00])
-    //        },
-    //    };
-
-    //for arg in std::env::args() {
-
-    //    // recreate notebook from svg
-    //    if arg=="1" {
-    //        let lines = read_svg(last_id, "test.svg").unwrap();
-
-    //        for line in lines.iter() {
-
-    //            let mut raw_block = RawBytes::from(Block::Line(line.clone()));
-    //            out.append(&mut raw_block);
-    //        };
-
-    //        write(last,out).unwrap();
-    //        break;
-    //    }
-
-    //    // create svg from notebook
-    //    else if arg=="2" {
-    //        let mut paths = Vec::new();
-
-    //        for block in &blocks {
-    //            if let Block::Line(line) = block {
-    //                let path = path_from_line(&line);
-    //                match path {
-    //                    None => {},
-    //                    Some(p) => {
-    //                        paths.push(p);
-    //                    },
-    //                };
-    //            };
-    //        };
-    //        //paths.push(create_border_path());
-    //        write_svg(paths, "test.svg").unwrap();
-    //    };
-    //};
-
-
-
-
-
-    //let base_point = Point {
-    //    x: -350.0,
-    //    y: 320.0,
-    //    speed: 1,
-    //    width: 16,
-    //    direction: 0,
-    //    pressure: 22,
-    //};
-
-    //let mut points: Vec<Point> = Vec::new();
-    //for i in 0..50 {
-    //    let mut new = base_point.clone();
-    //    new.y = new.y + f32::from(i*3 as u16);
-    //    points.push(new);
-    //};
-
-    //let line = Line {
-    //   layer_id: IdField([0x00, 0x0b, 0x00]), 
-    //   line_id: new_id,
-    //   last_line_id: last_id,
-    //   id_field_0: IdField([0x00,0x00,0x00]), 
-    //   pen_type: Some(17),
-    //   color: Some(0),
-    //   brush_size: Some(2.0),
-    //   points,
-    //};
-
-    //let mut raw_block = RawBytes::from(Block::Line(line));
-
-    //out.append(&mut raw_block);
-
-    //write(last,out);
-    
-    // -------=
-
-    ////blocks.iter().for_each(|b| println!("{:#?}",b));
-    ////dbg!(blocks.len());
-
-    //let mut paths = Vec::new();
-
-    //for block in blocks {
-    //    if let Block::Line(line) = block {
-    //        let path = path_from_line(&line);
-    //        match path {
-    //            None => {},
-    //            Some(p) => {
-    //                paths.push(p);
-    //            },
-    //        };
-    //    };
-    //};
-
-    //paths.push(create_border_path());
-
-
-    //write_svg(paths, "test.svg").unwrap();
 
 
