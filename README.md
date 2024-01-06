@@ -39,7 +39,7 @@ Here are the current progress and targets. This plan will be further refined.
     - [x] Text to internal structs
     - [ ] Output JSON
 - [ ] Creation
-- [~] **Insertion**: Sorta, through the lib
+- [ ] **Insertion**: Via the API only as of 2024.01.05
 
 
 - [ ] **More flexible notebook access**
