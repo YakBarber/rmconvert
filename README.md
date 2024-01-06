@@ -14,13 +14,7 @@ Watch this space for updates. Happy to accept pull requests!
 
 Here are the current progress and targets. This plan will be further refined.
 
-- [ ] Implement `nom` parser for all structs
-    - [x] **Line definition block**: Fully parsable and defined
-    - [x] **Layer definition block**: Fully parsable, partially understood
-    - [x] **Layer name block**: Fully parsable, partially understood
-    - [x] **Layer information block**: Fully parsable, partially understood
-    - [x] **Text definition block**: Fully parsable, partially understood
-    - [ ] **Frontmatter**: Can be bypassed by seeking
+- [x] Implement `nom` parser for all structs
 - [ ] SVG writing
     - [x] **Simple lines**
     - [ ] **Dynamic brush types**
@@ -41,18 +35,17 @@ Here are the current progress and targets. This plan will be further refined.
 
 
 - [ ] Extraction
-    - [ ] Lines to internal structs
-    - [ ] Text to internal structs
+    - [x] Lines to internal structs
+    - [x] Text to internal structs
     - [ ] Output JSON
 - [ ] Creation
 - [ ] Insertion
 
 
-- [ ] **Non-hacky CLI**: it's jank right now
 - [x] **Baseline notebook access**: Looks in `~/sshrm`, which expects a sshfs (or copied) `/home/root/.local/share/remarkable/xochitl` directory from your tablet. Currently searches and finds the most recently modified page and automatically loads it.
 - [ ] **More flexible notebook access**
 - [ ] **`.metadata` reading/parsing**: currently only used to find modified time
 - [ ] **`.content` reading/parsing**
 - [ ] **`.pagefile` reading/parsing**
-- [ ] **More docs**
+- [ ] **More docs**: The Forever Todo
 
