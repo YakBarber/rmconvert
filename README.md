@@ -39,10 +39,9 @@ Here are the current progress and targets. This plan will be further refined.
     - [x] Text to internal structs
     - [ ] Output JSON
 - [ ] Creation
-- [ ] Insertion
+- [~] **Insertion**: Sorta, through the lib
 
 
-- [x] **Baseline notebook access**: Looks in `~/sshrm`, which expects a sshfs (or copied) `/home/root/.local/share/remarkable/xochitl` directory from your tablet. Currently searches and finds the most recently modified page and automatically loads it.
 - [ ] **More flexible notebook access**
 - [ ] **`.metadata` reading/parsing**: currently only used to find modified time
 - [ ] **`.content` reading/parsing**
