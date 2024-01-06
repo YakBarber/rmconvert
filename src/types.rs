@@ -7,11 +7,21 @@ use nom::HexDisplay;
 use thiserror;
 
 #[derive(thiserror::Error, Debug)]
-pub enum Error <'a> {
+pub enum Error {
+    #[error("Bad arguments: {0}")]
+    ArgsError(String),
     #[error("Can't parse: {}", .0.to_hex(.1.clone()))]
-    ParseError(&'a [u8], usize),
+    ParseError(Vec<u8>, usize),
     #[error("Something bad happened")]
     OtherError,
+    #[error("IO error")]
+    IoError(std::io::Error),
+}
+
+#[derive(Debug, Clone)]
+pub struct Notebook {
+    pub frontmatter: Frontmatter,
+    pub blocks: Vec<Block>,
 }
 
 #[derive(Debug, Clone)]
@@ -41,7 +51,7 @@ impl IdField {
 
 pub type RawBytes = Vec<u8>;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Frontmatter {
     pub version: u8,
     pub unknown: Vec<u8>,

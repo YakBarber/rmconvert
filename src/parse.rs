@@ -9,16 +9,20 @@ use nom::sequence::{preceded, delimited};
 use nom::multi::{length_value, length_data, length_count, many0, count};
 use nom::combinator::map as pmap;
 
+use anyhow::{Result, Context};
+
 use super::types::*;
 
 pub const TEST_FILE_01: &str = "assets/213001cb-42c0-4628-8ed0-8320c15da2a8/110b4d92-e42e-4b78-a0cb-ebd40862f2f0.rm";
 pub const TEST_FILE_02: &str = "assets/213001cb-42c0-4628-8ed0-8320c15da2a8/9e0bdc4b-14cd-4d25-abb9-3ffd58d5a66e.rm";
 
 
-pub fn parse_full(input: &[u8]) -> IResult<&[u8], (Frontmatter, Vec<Block>)> {
-    let (input, fm) = parse_frontmatter(input)?;
-    let (rest, blocks) = many0(parse_block)(input)?;
-    Ok((rest, (fm, blocks)))
+pub fn parse_full(input: &[u8]) -> Result<Notebook> {
+    let msg = "Failed to parse full file".to_string();
+    let (input, fm) = parse_frontmatter(input).map_err(|e| e.to_owned()).context(msg)?;
+    //let (_rest, blocks) = many0(parse_block)(input)?;
+    let (_rest, blocks) = many0(parse_block)(input).map_err(|e| e.to_owned()).context("Failed to parse full file")?;
+    Ok(Notebook{frontmatter:fm, blocks: blocks})
 }
 
 pub fn parse_frontmatter(input: &[u8]) -> IResult<&[u8], Frontmatter> {
@@ -401,8 +405,8 @@ mod test {
         for entry in assets.read_dir().expect("can't read assets!") {
             if let Ok(file) = entry {
                 if file.path().extension().unwrap() == clap::builder::OsStr::from("rm") {
-                    let bytes: &[u8] = &read(file.path()).unwrap();
-                    let (_, (_fm, _blocks)) = parse_full(&bytes).unwrap();
+                    let bytes: Vec<u8> = read(file.path()).unwrap();
+                    let _notebook = parse_full(&bytes.clone()).unwrap();
                 };
             };
         };
@@ -434,9 +438,9 @@ mod test {
     #[test]
     fn get_all_blocks() {
         let bytes: &[u8] = &read(TEST_FILE_01).unwrap();
-        let (_, (_fm, blocks)) = parse_full(&bytes).unwrap();
+        let notebook = parse_full(&bytes).unwrap();
 
-        assert_eq!(12, blocks.len());
+        assert_eq!(12, notebook.blocks.clone().len());
     }
 
 }

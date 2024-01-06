@@ -23,10 +23,10 @@ pub enum Commands {
 
 #[derive(Debug, Subcommand, Clone, ValueEnum)]
 pub enum OutputFormat {
-    Human,
+    Markdown,
     JSON,
     SVG,
-    Raw,
+    Debug,
     Bytes,
 }
 
@@ -61,7 +61,7 @@ pub struct ExtractArgs {
     #[arg(short, long, group = "inargs")]
     pub last: bool,
 
-    #[arg(short='t', long, default_value="human")]
+    #[arg(short='t', long, default_value="debug")]
     pub format: OutputFormat,
 
     #[arg(short='x', long)]
