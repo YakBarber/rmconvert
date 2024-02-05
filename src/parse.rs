@@ -13,8 +13,8 @@ use anyhow::{Result, Context};
 
 use super::types::*;
 
-pub const TEST_FILE_01: &str = "assets/213001cb-42c0-4628-8ed0-8320c15da2a8/110b4d92-e42e-4b78-a0cb-ebd40862f2f0.rm";
-pub const TEST_FILE_02: &str = "assets/213001cb-42c0-4628-8ed0-8320c15da2a8/9e0bdc4b-14cd-4d25-abb9-3ffd58d5a66e.rm";
+pub const TEST_FILE_01: &str = "assets/test_notebooks/213001cb-42c0-4628-8ed0-8320c15da2a8/110b4d92-e42e-4b78-a0cb-ebd40862f2f0.rm";
+pub const TEST_FILE_02: &str = "assets/test_notebooks/213001cb-42c0-4628-8ed0-8320c15da2a8/9e0bdc4b-14cd-4d25-abb9-3ffd58d5a66e.rm";
 
 
 pub fn parse_full(input: &[u8]) -> Result<Notebook> {
@@ -401,7 +401,7 @@ mod test {
     fn can_parse_all() {
         init();
         let mut assets = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-        assets.push("assets/213001cb-42c0-4628-8ed0-8320c15da2a8");
+        assets.push("assets/test_notebooks/213001cb-42c0-4628-8ed0-8320c15da2a8");
         for entry in assets.read_dir().expect("can't read assets!") {
             if let Ok(file) = entry {
                 if file.path().extension().unwrap() == clap::builder::OsStr::from("rm") {
