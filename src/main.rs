@@ -301,15 +301,17 @@ fn file_to_stats<R: Read>(mut rmpath: R) -> Result<()> {
     Ok(())
 }
 
-fn main() {
+fn main() -> Result<()> {
 
     env_logger::init();
 
-    let ui = Cli::parse_with_env();
+    // TODO: remove this method entirely, replace with Settings::new()
+    let ui = Cli::parse();
+    let settings = Settings::new()?;
 
     match ui.command {
         Commands::Create(c_args) => {
-            do_create(c_args, ui.remarkable_dir).unwrap();
+            do_create(c_args, ui.rm_path)?;
         },
         Commands::Extract(e_args) => {
             do_extract(e_args, ui.remarkable_dir);
