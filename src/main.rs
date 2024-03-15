@@ -10,14 +10,17 @@ use rmconvert::parse::*;
 use rmconvert::svg::*;
 use rmconvert::util::*;
 use rmconvert::cli::*;
+use rmconvert::config::*;
+use rmconvert::draw;
 
 use svg::node::element::Path;
 
+use clap::Parser;
 use clio::Input;
 
 use log::warn;
 
-fn extract_from_blocks(ExtractArgs {skip_text, skip_lines, .. }: ExtractArgs, blocks: Vec<Block>) -> (Option<Vec<Path>>, Option<Vec<String>>) {
+fn extract_from_blocks(ExtractArgs {skip_text, skip_lines, .. }: ExtractArgs, notebook: Notebook) -> (Option<Vec<Path>>, Option<Vec<String>>) {
 
     (None, None)
 }
@@ -25,8 +28,10 @@ fn extract_from_blocks(ExtractArgs {skip_text, skip_lines, .. }: ExtractArgs, bl
 /// Convert Blocks into SVG paths, and return the Vec<Path>.
 ///
 /// Path creation is very simplistic, and not all Block types are supported.
-fn blocks_to_svg_paths(blocks: Vec<Block>) -> Vec<Path> {
+fn blocks_to_svg_paths(notebook: Notebook) -> Vec<Path> {
     let mut paths = Vec::new();
+
+    let blocks = notebook.blocks;
 
     for block in &blocks {
         if let Block::Line(line) = block {
@@ -50,10 +55,43 @@ fn file_to_blocks<R: Read>(mut rmpath: R) -> Result<Notebook> {
     parse_full(&bytes)
 }
 
+fn write_blocks_to_rm_file(notebook: Notebook, file: PathBuf) -> Result<PathBuf> {
+    todo!()
+}
+
+fn write_blocks<W: Write>(notebook: Notebook, writer: W) -> Result<()> {
+    todo!()
+}
+
+/// Render the Notebook as a String, based on the required output format. 
+///
+/// All output formats are returned as Strings, until this abstraction proves problematic.
+fn render(notebook: Notebook, format: OutputFormat, settings: Settings) -> Result<String> {
+    match format {
+        OutputFormat::Markdown => {
+            render_markdown(notebook, settings.output.markdown)
+        },
+        OutputFormat::JSON => {
+            render_json(notebook, settings.output.json)
+        },
+        OutputFormat::SVG => {
+            render_svg(notebook, settings.output.svg)
+        },
+        OutputFormat::Debug => {
+            render_debug(notebook, settings.output.debug)
+        },
+        OutputFormat::Bytes => {
+            render_bytes(notebook, settings.output.bytes)
+        },
+    }
+}
+
 fn render_markdown(notebook: Notebook, cfg: MarkdownCfg) -> Result<String> {
     let mut strings = Vec::new();
 
-    for block in &notebook.blocks {
+    let blocks = notebook.blocks;
+
+    for block in blocks {
         if let Block::TextDef(tdef) = block {
             for chunk in &tdef.texts {
                 strings.push(chunk.text.clone());
@@ -65,8 +103,25 @@ fn render_markdown(notebook: Notebook, cfg: MarkdownCfg) -> Result<String> {
     Ok(strings.join("\n"))
 }
 
+fn render_json(notebook: Notebook, cfg: JsonCfg) -> Result<String> {
+    let json = serde_json::to_string(&notebook.blocks)?;
+    Ok(json)
+}
+
+fn render_svg(notebook: Notebook, cfg: SvgCfg) -> Result<String> {
+    todo!()
+}
+
+fn render_debug(notebook: Notebook, cfg: DebugCfg) -> Result<String> {
+    Ok(format!("{:?}", notebook.blocks))
+}
+
+fn render_bytes(notebook: Notebook, cfg: BytesCfg) -> Result<String> {
+    todo!()
+}
+
+
 // TODO: use stdin? Does it even make sense here?
-// TODO: Return a Result<()>?
 // TODO: make the panics reprint the --help text
 fn do_extract(eargs: ExtractArgs, rmdir: Option<PathBuf>) -> Result<Notebook> {
 
@@ -101,8 +156,9 @@ fn do_extract(eargs: ExtractArgs, rmdir: Option<PathBuf>) -> Result<Notebook> {
 
     let Notebook{frontmatter, blocks} = notebook.clone();
 
+
     if !skip_lines {
-        let svg_paths = blocks_to_svg_paths(blocks.clone());
+        let svg_paths = blocks_to_svg_paths(notebook.clone());
 
         if let Some(out) = output.clone() {
             //svg_paths.push(create_border_path());
@@ -234,13 +290,6 @@ fn do_create(cargs: CreateArgs, rmdir: Option<PathBuf>) -> Result<Notebook> {
     todo!()
 }
 
-#[allow(unused_variables)]
-fn do_insert(iargs: InsertArgs, rmdir: Option<PathBuf>) {
-    
-    let InsertArgs {input, output, last, layer} = iargs;
-    todo!();
-}
-
 #[allow(unused_variables, unused_mut)]
 fn file_to_stats<R: Read>(mut rmpath: R) -> Result<()> {
     
@@ -314,31 +363,35 @@ fn main() -> Result<()> {
             do_create(c_args, ui.rm_path)?;
         },
         Commands::Extract(e_args) => {
-            do_extract(e_args, ui.remarkable_dir);
+            let notebook = do_extract(e_args.clone(), ui.rm_path)?;
+            let out_str = render(notebook, e_args.format, settings);
         },
-        Commands::Insert(i_args) => {
-            do_insert(i_args, ui.remarkable_dir);
-
+        Commands::Draw(d_args) => {
+            //let notebook = do_extract(d_args.clone(), ui.rm_path)?;
+            draw::create_path(d_args)?;
+            
         },
         Commands::Stats(s_args) => {
             if s_args.last {
-                let lastf = last_modified_page(&ui.remarkable_dir.unwrap()).unwrap();
+                let lastf = last_modified_page(&ui.rm_path.unwrap()).unwrap();
                 let cliopath = Input::new(&lastf).unwrap();
-                file_to_stats(cliopath);
+                file_to_stats(cliopath)?;
             }
             else {
                 match &s_args.input {
                     Some(file) => {
-                        file_to_stats(file.clone());
+                        file_to_stats(file.clone())?;
                     },
                     None => {
                     },
                 };
             };
-            file_to_stats(s_args.input.unwrap());
+            file_to_stats(s_args.input.unwrap())?;
 
         },
     };
+
+    Ok(())
 }
 
 

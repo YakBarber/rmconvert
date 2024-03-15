@@ -4,3 +4,4 @@ pub mod svg;
 pub mod util;
 pub mod cli;
 pub mod config;
+pub mod draw;

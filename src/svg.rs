@@ -12,6 +12,7 @@ pub const HALF_WIDTH: f32 = 702.0;
 pub const WIDTH: f32 = 1404.0;
 pub const HEIGHT: f32 = 1872.0;
 
+// TODO: make `num_points` not-magic
 pub fn cubic_to_points(p1: (f32,f32), p2: (f32, f32), pe: (f32, f32)) -> Vec<(f32,f32)> {
     let mut points = Vec::new();
 
@@ -107,8 +108,9 @@ pub fn read_svg_buffer<'a>(svg_buf: &str) -> std::io::Result<Vec<Line>> {
     
 }
 
-fn parse_svg_to_lines<'a, I, E>(svg_events: I, start_id: IdField, prev_id: IdField) -> Result<Vec<Line>, E> 
-    where I: IntoIterator<Item=Event<'a>>,
+// TODO: DECOUPLE THIS FROM Event. That's why it is broken.
+// how to deal with transforms?
+pub fn svg_path_data_to_lines<E>(data: Data, start_id: IdField, prev_id: IdField) -> Result<Vec<Line>, E>
 {
     let base_line = Line {
         layer_id: IdField([0x00, 0x0b, 0x00]), 
@@ -126,6 +128,72 @@ fn parse_svg_to_lines<'a, I, E>(svg_events: I, start_id: IdField, prev_id: IdFie
     let mut last_id = prev_id;
     let mut lines: Vec<Line> = Vec::new(); //my Line, not svg::_::Line
 
+    for cmd in data.iter() {
+
+        let mut pts = Vec::new();
+        let mut line = base_line.clone();
+
+        match cmd {
+            Command::Move(pos,params) => {
+                pts = cmd_to_xy(curr_position, pos, params);
+            },
+            Command::Line(pos,params) => {
+                pts = cmd_to_xy(curr_position, pos, params);
+            },
+            Command::CubicCurve(pos,params) => {
+                pts = cmd_to_xy(curr_position, pos, params);
+                pts = cubic_to_points(
+                    pts.get(0).unwrap().clone(), 
+                    pts.get(1).unwrap().clone(), 
+                    pts.get(2).unwrap().clone(), 
+                    );
+
+            },
+            _ => {},
+        };
+        
+        //do transforms here?
+
+        for (x,y) in pts.iter() {
+            let point = Point {
+                x: x.clone()-HALF_WIDTH,
+                y: y.clone(),
+                speed: 1,
+                width: 16,
+                direction: 0,
+                pressure: 22,
+            };
+
+            line.points.push(point);
+        };
+
+        lines.push(line);
+
+        curr_position = pts.last().unwrap().clone();
+    };
+
+    Ok(lines)
+}
+
+fn parse_svg_to_lines<'a, I, E>(svg_events: I, start_id: IdField, prev_id: IdField) -> Result<Vec<Line>, E> 
+    where I: IntoIterator<Item=Event<'a>>,
+{
+    //let base_line = Line {
+    //    layer_id: IdField([0x00, 0x0b, 0x00]), 
+    //    line_id: IdField([0x00, 0x00, 0x00]),
+    //    last_line_id: IdField([0x00, 0x00, 0x00]),
+    //    id_field_0: IdField([0x00, 0x00, 0x00]), 
+    //    pen_type: Some(17),
+    //    color: Some(0),
+    //    brush_size: Some(2.0),
+    //    points: Vec::new(),
+    //};
+
+    //let mut curr_position: (f32, f32) = (0.0, 0.0);
+    //let mut curr_id = start_id;
+    //let mut last_id = prev_id;
+    let mut lines: Vec<Line> = Vec::new(); //my Line, not svg::_::Line
+
     for event in svg_events {
         match event {
             Event::Tag(tag, _, attributes) => {
@@ -133,73 +201,76 @@ fn parse_svg_to_lines<'a, I, E>(svg_events: I, start_id: IdField, prev_id: IdFie
                     continue;
                 };
 
-                let mut line = base_line.clone();
-                line.last_line_id = last_id.clone();
-                line.line_id = curr_id.clone();
+                //let mut line = base_line.clone();
+                //line.last_line_id = last_id.clone();
+                //line.line_id = curr_id.clone();
 
-                curr_id.inc(1);
-                last_id.inc(1);
+                //curr_id.inc(1);
+                //last_id.inc(1);
 
                 let data = attributes.get("d").unwrap();
                 let data = Data::parse(data).unwrap();
 
-                for cmd in data.iter() {
+                let mut line = svg_path_data_to_lines(data, start_id.clone(), prev_id.clone())?;
+                lines.append(&mut line);
 
-                    let mut pts = Vec::new();
+                //for cmd in data.iter() {
 
-                    match cmd {
-                        Command::Move(pos,params) => {
-                            pts = cmd_to_xy(curr_position, pos, params);
-                        },
-                        Command::Line(pos,params) => {
-                            pts = cmd_to_xy(curr_position, pos, params);
-                        },
-                        Command::CubicCurve(pos,params) => {
-                            pts = cmd_to_xy(curr_position, pos, params);
-                            pts = cubic_to_points(
-                                pts.get(0).unwrap().clone(), 
-                                pts.get(1).unwrap().clone(), 
-                                pts.get(2).unwrap().clone(), 
-                                );
+                //    let mut pts = Vec::new();
 
-                        },
-                        _ => {},
-                    };
+                //    match cmd {
+                //        Command::Move(pos,params) => {
+                //            pts = cmd_to_xy(curr_position, pos, params);
+                //        },
+                //        Command::Line(pos,params) => {
+                //            pts = cmd_to_xy(curr_position, pos, params);
+                //        },
+                //        Command::CubicCurve(pos,params) => {
+                //            pts = cmd_to_xy(curr_position, pos, params);
+                //            pts = cubic_to_points(
+                //                pts.get(0).unwrap().clone(), 
+                //                pts.get(1).unwrap().clone(), 
+                //                pts.get(2).unwrap().clone(), 
+                //                );
 
-                    match attributes.get("transform") {
-                        None => {},
-                        Some(tfm) => {
-                            let tfm = tfm.strip_prefix("matrix(").unwrap();
-                            let tfm = tfm.trim_end_matches(")");
-                            let mut coeffs = Vec::new();
-                            for coeff in tfm.split(",") {
-                                coeffs.push(coeff.trim_start().parse::<f32>().unwrap());
-                            };
+                //        },
+                //        _ => {},
+                //    };
 
-                            pts = pts.iter().map(|(_x, _y)| {
-                                let x = coeffs.get(0).unwrap() * _x  + coeffs.get(2).unwrap() * _y + coeffs.get(4).unwrap();
-                                let y = coeffs.get(1).unwrap() * _x  + coeffs.get(3).unwrap() * _y + coeffs.get(5).unwrap();
-                                (x,y)
-                            }).collect();
-                        },
-                    };
+                //    match attributes.get("transform") {
+                //        None => {},
+                //        Some(tfm) => {
+                //            let tfm = tfm.strip_prefix("matrix(").unwrap();
+                //            let tfm = tfm.trim_end_matches(")");
+                //            let mut coeffs = Vec::new();
+                //            for coeff in tfm.split(",") {
+                //                coeffs.push(coeff.trim_start().parse::<f32>().unwrap());
+                //            };
 
-                    curr_position = pts.last().unwrap().clone();
+                //            pts = pts.iter().map(|(_x, _y)| {
+                //                let x = coeffs.get(0).unwrap() * _x  + coeffs.get(2).unwrap() * _y + coeffs.get(4).unwrap();
+                //                let y = coeffs.get(1).unwrap() * _x  + coeffs.get(3).unwrap() * _y + coeffs.get(5).unwrap();
+                //                (x,y)
+                //            }).collect();
+                //        },
+                //    };
 
-                    for (x,y) in pts.iter() {
-                        let point = Point {
-                            x: x.clone()-HALF_WIDTH,
-                            y: y.clone(),
-                            speed: 1,
-                            width: 16,
-                            direction: 0,
-                            pressure: 22,
-                        };
+                //    curr_position = pts.last().unwrap().clone();
 
-                        line.points.push(point);
-                    };
-                };
-                lines.push(line);
+                //    for (x,y) in pts.iter() {
+                //        let point = Point {
+                //            x: x.clone()-HALF_WIDTH,
+                //            y: y.clone(),
+                //            speed: 1,
+                //            width: 16,
+                //            direction: 0,
+                //            pressure: 22,
+                //        };
+
+                //        line.points.push(point);
+                //    };
+                //};
+
             },
             _ => {},
             };

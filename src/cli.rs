@@ -2,6 +2,7 @@
 use std::path::PathBuf;
 
 use clap::{Args, Subcommand, Parser, ValueEnum};
+use serde::{Serialize, Deserialize};
 
 use clio::{Input, Output};
 
@@ -14,14 +15,14 @@ pub enum Commands {
     /// Create a new reMarkable file and add line data to it
     Create(CreateArgs),
     
-    /// Insert line data into an *existing* reMarkable file
-    Insert(InsertArgs),
-
+    /// Draw a new shape into a reMarkable file
+    Draw(DrawArgs),
+    
     /// Read a reMarkable file and structure and content info
     Stats(StatsArgs),
 }
 
-#[derive(Debug, Subcommand, Clone, ValueEnum)]
+#[derive(Debug, Subcommand, Clone, ValueEnum, Serialize, Deserialize)]
 pub enum OutputFormat {
     Markdown,
     JSON,
@@ -43,7 +44,7 @@ pub struct StatsArgs {
     pub last: bool,
 }
 
-#[derive(Debug, Args)]
+#[derive(Debug, Args, Clone)]
 pub struct ExtractArgs {
 
     /// reMarkable file to extract from.
@@ -96,27 +97,59 @@ pub struct CreateArgs {
 }
 
 #[derive(Debug, Args)]
-pub struct InsertArgs {
-    /// SVG file to create from.
+pub struct DrawArgs {
+    /// reMarkable file to target.
     #[clap(value_parser)]
-    #[arg(short,long, group = "inargs")]
-    pub input: Option<Input>,
-
-    /// reMarkable file to insert into
-    #[clap(value_parser)]
-    #[arg(short,long, group = "inargs")]
-    pub output: Output,
+    #[arg(short,long, group="gtarget")]
+    pub output: Option<Output>,
     
-    /// Attempt to replace the last opened reMarkable page file (slow)
+    /// Attempt to target the last opened reMarkable page file (slow). 
+    /// Will fail if no file can be found.
     #[clap(value_parser)]
-    #[arg(short,long, group = "inargs")]
+    #[arg(short,long, group="gtarget")]
     pub last: bool,
 
-    /// layer in the reMarkable file to use (?)
+    /// Draw the contents of an SVG file.
     #[clap(value_parser)]
     #[arg(long)]
-    pub layer: Option<u8>,
+    pub from_file: Option<Input>,
+    
+    /// Create a new path. Requires at least 1 of <descriptor args>
+    #[clap(value_parser)]
+    #[arg(long)]
+    pub path: bool,
+    
+    /// Draw the shape with its raw SVG args.
+    ///
+    /// TODO: target these first
+    /// M x  y
+    /// m dx dy
+    /// L x  y
+    /// l dx dy
+    /// H x
+    /// h dx
+    /// V    y
+    /// v    dy
+    ///
+    #[clap(value_parser)]
+    #[arg(long)]
+    pub raw: Option<String>,
 
+    #[clap(value_parser)]
+    #[arg(long, group="gpath")]
+    pub stroke: Option<u8>,
+
+    //// other shapes here. focus on path first
+    //
+    // /// Create a new line. Requires at least 1 of <descriptor args>
+    // #[clap(value_parser)]
+    // #[arg(long, group="line")]
+    // pub line: bool,
+
+    // /// Create a new circle. Requires at least 1 of <descriptor args>
+    // #[clap(value_parser)]
+    // #[arg(long, group="circle")]
+    // pub circle: bool,
 }
 
 #[derive(Debug, Parser)]
@@ -131,29 +164,30 @@ pub struct Cli {
     ///
     /// In the tablet itself, this directory is `/home/root/.local/share/remarkable/xochitl`.
     #[arg(short, long, name = "RM_DIR")]
-    pub remarkable_dir: Option<PathBuf>,
+    pub rm_path: Option<PathBuf>,
 }
 
-impl Cli {
-    /// works like Parser::parse, but will fill in missing args that have equivalent
-    /// environment variables set. Args, when supplied, always supercede environment variables.
-    pub fn parse_with_env() -> Self {
-        // recursively load relevant .env files
-        dotenv::dotenv().ok();
-
-        let mut cui = Cli::parse();
-
-        cui.remarkable_dir = cui.remarkable_dir.or_else( || {
-            if envmnt::exists("RMCONVERT_RM_DIR") {
-                let dir: String = envmnt::get_parse("RMCONVERT_RM_DIR").unwrap();
-                Some(PathBuf::from(dir))
-            }
-            else {
-                None
-            }
-        });
-
-        cui
-    }
-}
+//impl Cli {
+//
+//    /// works like Parser::parse, but will fill in missing args that have equivalent
+//    /// environment variables set. Args, when supplied, always supercede environment variables.
+//    pub fn parse_with_env() -> Self {
+//        // recursively load relevant .env files
+//        dotenv::dotenv().ok();
+//
+//        let mut cui = Cli::parse();
+//
+//        cui.rm_path = cui.rm_path.or_else( || {
+//            if envmnt::exists("RMCONVERT_RM_DIR") {
+//                let dir: String = envmnt::get_parse("RMCONVERT_RM_DIR").unwrap();
+//                Some(PathBuf::from(dir))
+//            }
+//            else {
+//                None
+//            }
+//        });
+//
+//        cui
+//    }
+//}
 

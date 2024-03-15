@@ -3,6 +3,7 @@ use std::vec::Vec;
 
 use std::primitive::{u8,u32,f32};
 
+use serde::Serialize;
 use nom::HexDisplay;
 use thiserror;
 
@@ -12,19 +13,23 @@ pub enum Error {
     ArgsError(String),
     #[error("Can't parse: {}", .0.to_hex(.1.clone()))]
     ParseError(Vec<u8>, usize),
+    #[error("SVG parsing error: {}", .0)]
+    SvgError(svg::parser::Error),
     #[error("Something bad happened")]
     OtherError,
     #[error("IO error")]
     IoError(std::io::Error),
+    #[error("Error with config")]
+    ConfigError(config::ConfigError),
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub struct Notebook {
     pub frontmatter: Frontmatter,
     pub blocks: Vec<Block>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub struct IdField(pub [u8;3]);
 
 impl IdField {
@@ -51,13 +56,13 @@ impl IdField {
 
 pub type RawBytes = Vec<u8>;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub struct Frontmatter {
     pub version: u8,
     pub unknown: Vec<u8>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub struct Line {
    pub layer_id: IdField, 
    pub line_id: IdField, 
@@ -69,7 +74,7 @@ pub struct Line {
    pub points: Vec<Point>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub struct Point {
     pub x: f32,
     pub y: f32,
@@ -79,14 +84,14 @@ pub struct Point {
     pub pressure: u8,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub struct LayerDef {
     pub layer_id: IdField,
     pub unknown_1: Vec<u8>, //4 bytes
     pub unknown_2: Vec<u8>, //?? bytes
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub struct LayerName {
     pub layer_id: IdField,
     pub id_field_0: IdField,
@@ -94,7 +99,7 @@ pub struct LayerName {
     pub unknown_rest: Vec<u8>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub struct LayerInfo {
     pub id_field_0: IdField,
     pub id_field_1: IdField,
@@ -103,7 +108,7 @@ pub struct LayerInfo {
     pub layer_id: Option<IdField>
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub struct TextDef {
     pub id_field_0: IdField,
     pub texts: Vec<TextChunk>,
@@ -112,7 +117,7 @@ pub struct TextDef {
     pub unknown_unsized: String,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub struct TextChunk {
     pub chunk_id: IdField,
     pub other_chunk_id_0: IdField,
@@ -122,14 +127,14 @@ pub struct TextChunk {
     pub magic_dollar: Option<u32>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub struct TextBackmatter {
     pub id_field_0: IdField,
     pub id_field_1: IdField,
     pub id_field_2: IdField,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub enum Block{
     Line(Line),
     LayerDef(LayerDef),

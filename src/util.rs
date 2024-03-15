@@ -73,6 +73,7 @@ pub fn last_modified_notebook(root_dir: &PathBuf) -> io::Result<PathBuf> {
 pub fn last_modified_page(root_dir: &PathBuf) -> io::Result<PathBuf> {
 
     let last_notebook = last_modified_notebook(root_dir)?;
+    dbg!(&last_notebook);
     let notebook_uuid = last_notebook.file_stem().unwrap();
     let mut content_file = PathBuf::new();
     content_file.push(root_dir);
