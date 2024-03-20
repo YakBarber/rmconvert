@@ -12,9 +12,6 @@ pub enum Commands {
     /// Extract a single reMarkable page-file to SVG.
     Extract(ExtractArgs),
 
-    /// Create a new reMarkable file and add line data to it
-    Create(CreateArgs),
-    
     /// Draw a new shape into a reMarkable file
     Draw(DrawArgs),
     
@@ -70,30 +67,6 @@ pub struct ExtractArgs {
 
     #[arg(short='X', long)]
     pub skip_lines: bool,
-}
-
-#[derive(Debug, Args)]
-pub struct CreateArgs {
-    /// SVG file to create from.
-    #[clap(value_parser)]
-    #[arg(short,long)]
-    pub input: Option<Input>,
-
-    /// reMarkable file to create. Will not overwrite unless --force is given.
-    #[clap(value_parser)]
-    #[arg(short,long, group = "inargs")]
-    pub output: Option<Output>,
-    
-    /// Attempt to replace the last opened reMarkable page file (slow). 
-    /// Requires the --force flag, otherwise it will fail.
-    #[clap(value_parser)]
-    #[arg(short,long, group = "inargs")]
-    pub last: bool,
-
-    /// Force an overwrite operation if the file to be created already exists.
-    #[clap(value_parser)]
-    #[arg(short,long)]
-    pub force: bool,
 }
 
 #[derive(Debug, Args)]
