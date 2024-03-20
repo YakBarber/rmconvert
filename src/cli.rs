@@ -82,47 +82,29 @@ pub struct DrawArgs {
     #[arg(short,long, group="gtarget")]
     pub last: bool,
 
-    /// Draw the contents of an SVG file.
     #[clap(value_parser)]
     #[arg(long)]
-    pub from_file: Option<Input>,
-    
-    /// Create a new path. Requires at least 1 of <descriptor args>
+    pub svg: Option<Input>,
+
     #[clap(value_parser)]
     #[arg(long)]
-    pub path: bool,
-    
-    /// Draw the shape with its raw SVG args.
-    ///
-    /// TODO: target these first
-    /// M x  y
-    /// m dx dy
-    /// L x  y
-    /// l dx dy
-    /// H x
-    /// h dx
-    /// V    y
-    /// v    dy
-    ///
+    pub svg_path: Option<String>,
+
     #[clap(value_parser)]
     #[arg(long)]
-    pub raw: Option<String>,
+    pub width: Option<String>,
 
     #[clap(value_parser)]
-    #[arg(long, group="gpath")]
-    pub stroke: Option<u8>,
+    #[arg(long)]
+    pub pen: Option<String>,
 
-    //// other shapes here. focus on path first
-    //
-    // /// Create a new line. Requires at least 1 of <descriptor args>
-    // #[clap(value_parser)]
-    // #[arg(long, group="line")]
-    // pub line: bool,
+    #[clap(value_parser)]
+    #[arg(long)]
+    pub layer: Option<String>,
 
-    // /// Create a new circle. Requires at least 1 of <descriptor args>
-    // #[clap(value_parser)]
-    // #[arg(long, group="circle")]
-    // pub circle: bool,
+    #[clap(value_parser)]
+    #[arg(long)]
+    pub color: Option<String>,
 }
 
 #[derive(Debug, Parser)]
