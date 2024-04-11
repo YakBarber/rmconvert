@@ -8,17 +8,22 @@ use nom::HexDisplay;
 use thiserror;
 
 #[derive(thiserror::Error, Debug)]
-pub enum Error {
+pub enum RMError {
     #[error("Bad arguments: {0}")]
     ArgsError(String),
+
     #[error("Can't parse: {}", .0.to_hex(.1.clone()))]
     ParseError(Vec<u8>, usize),
+
     #[error("SVG parsing error: {}", .0)]
-    SvgError(svg::parser::Error),
+    SvgError(#[from] svg::parser::Error),
+
     #[error("Something bad happened")]
     OtherError,
+
     #[error("IO error")]
     IoError(std::io::Error),
+
     #[error("Error with config")]
     ConfigError(config::ConfigError),
 }

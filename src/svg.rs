@@ -8,6 +8,8 @@ use svg::parser::Event;
 
 use crate::types::*;
 
+type Result<T> = std::result::Result<T, RMError>;
+
 pub const HALF_WIDTH: f32 = 702.0;
 pub const WIDTH: f32 = 1404.0;
 pub const HEIGHT: f32 = 1872.0;
@@ -96,16 +98,17 @@ pub fn write_svg_to_stdout<I>(paths: I) -> std::io::Result<()>
 /// Read an SVG file into a reMarkable-style struct (rmconvert::types::Line).
 ///
 /// TODO: make this interface better
-pub fn read_svg_file<P: AsRef<std::path::Path>>(filepath: P) -> std::io::Result<Vec<Line>> {
+pub fn read_svg_file<P: AsRef<std::path::Path>>(filepath: P) -> Result<Vec<Line>> {
     let mut content = String::new();
-    let events = svg::open(filepath, &mut content)?;
+    let events = match svg::open(filepath, &mut content){
+        Ok(parser) => {
+            parser
+        },
+        Err(error) => {
+            return Err(RMError::IoError(error))
+        },
+    };
     parse_svg_to_lines(events, IdField([0x00,0x00,0x00]), IdField([0x00,0x00,0x00]))
-}
-
-pub fn read_svg_buffer<'a>(svg_buf: &str) -> std::io::Result<Vec<Line>> {
-    let events = svg::read(svg_buf)?;
-    parse_svg_to_lines(events, IdField([0x00,0x00,0x00]), IdField([0x00,0x00,0x00]))
-    
 }
 
 // TODO: DECOUPLE THIS FROM Event. That's why it is broken.
@@ -170,12 +173,20 @@ pub fn svg_path_data_to_lines<E>(data: Data, start_id: IdField, prev_id: IdField
         lines.push(line);
 
         curr_position = pts.last().unwrap().clone();
+pub fn read_svg_buffer<'a>(svg_buf: &str) -> Result<Vec<Line>> {
+    let events = match svg::read(svg_buf) {
+        Ok(parser) => {
+            parser
+        },
+        Err(error) => {
+            return Err(RMError::IoError(error))
+        },
     };
 
     Ok(lines)
 }
 
-fn parse_svg_to_lines<'a, I, E>(svg_events: I, start_id: IdField, prev_id: IdField) -> Result<Vec<Line>, E> 
+fn parse_svg_to_lines<'a, I>(svg_events: I, start_id: IdField, prev_id: IdField) -> Result<Vec<Line>> 
     where I: IntoIterator<Item=Event<'a>>,
 {
     //let base_line = Line {

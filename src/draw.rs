@@ -7,9 +7,9 @@ use crate::cli::*;
 use crate::types::*;
 use crate::svg::{read_svg_buffer, svg_path_data_to_lines};
 
-/// Error is rmconvert::types::Error
-type Result<T> = std::result::Result<T, Error>;
 
+
+type Result<T> = std::result::Result<T, RMError>;
 
 
 fn to_xy(curr_xy: (f32, f32), pos: &Position, params: &Parameters) -> (f32, f32) {
@@ -31,7 +31,7 @@ fn to_xy(curr_xy: (f32, f32), pos: &Position, params: &Parameters) -> (f32, f32)
 #[allow(unused_variables)]
 pub fn create_path(args: DrawArgs) -> Result<Vec<Block>> {
 
-    let data = Data::parse(&args.svg_path.unwrap()[..]).map_err(Error::SvgError)?;
+    let data = Data::parse(&args.svg_path.unwrap()[..]).map_err(RMError::SvgError)?;
 
     let lines = svg_path_data_to_lines(data, IdField([0x00,0x00,0x00]), IdField([0x00,0x00,0x00]))?;
 
