@@ -92,6 +92,10 @@ pub struct DrawArgs {
 
     #[clap(value_parser)]
     #[arg(long)]
+    pub text: Option<String>,
+
+    #[clap(value_parser)]
+    #[arg(long)]
     pub width: Option<String>,
 
     #[clap(value_parser)]
