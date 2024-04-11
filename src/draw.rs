@@ -5,8 +5,11 @@ use svg::node::element::path::{Data, Command, Position, Parameters};
 
 use crate::cli::*;
 use crate::types::*;
-use crate::svg::{read_svg_buffer, svg_path_data_to_lines};
+use crate::svg::*;
 
+pub const HALF_WIDTH: f32 = 702.0;
+pub const WIDTH: f32 = 1404.0;
+pub const HEIGHT: f32 = 1872.0;
 
 
 type Result<T> = std::result::Result<T, RMError>;
@@ -33,7 +36,7 @@ pub fn create_path(args: DrawArgs) -> Result<Vec<Block>> {
 
     let data = Data::parse(&args.svg_path.unwrap()[..]).map_err(RMError::SvgError)?;
 
-    let lines = svg_path_data_to_lines(data, IdField([0x00,0x00,0x00]), IdField([0x00,0x00,0x00]))?;
+    let lines = svg_path_to_lines(data, HashMap::new(), IdField([0x00,0x00,0x00]), IdField([0x00,0x00,0x00]))?;
 
 
     Ok(Vec::new())
