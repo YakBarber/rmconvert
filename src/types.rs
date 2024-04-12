@@ -1,5 +1,6 @@
 
 use std::vec::Vec;
+use std::default::Default;
 
 use std::primitive::{u8,u32,f32};
 
@@ -34,7 +35,7 @@ pub struct Notebook {
     pub blocks: Vec<Block>,
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Default)]
 pub struct IdField(pub [u8;3]);
 
 impl IdField {
@@ -67,7 +68,7 @@ pub struct Frontmatter {
     pub unknown: Vec<u8>,
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Default)]
 pub struct Line {
    pub layer_id: IdField, 
    pub line_id: IdField, 
@@ -79,7 +80,7 @@ pub struct Line {
    pub points: Vec<Point>,
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Default)]
 pub struct Point {
     pub x: f32,
     pub y: f32,
