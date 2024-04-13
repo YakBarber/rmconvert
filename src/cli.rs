@@ -15,8 +15,8 @@ pub enum Commands {
     /// Draw a new shape into a reMarkable file
     Draw(DrawArgs),
     
-    /// Read a reMarkable file and structure and content info
-    Stats(StatsArgs),
+    // /// Read a reMarkable file and structure and content info
+    // Stats(StatsArgs),
 }
 
 #[derive(Debug, Subcommand, Clone, ValueEnum, Serialize, Deserialize)]
@@ -59,8 +59,8 @@ pub struct ExtractArgs {
     #[arg(short, long, group = "inargs")]
     pub last: bool,
 
-    #[arg(short='t', long, default_value="debug")]
-    pub format: OutputFormat,
+    //#[arg(short='t', long, default_value="debug")]
+    //pub format: OutputFormat,
 
     #[arg(short='x', long)]
     pub skip_text: bool,

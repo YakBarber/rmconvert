@@ -125,7 +125,7 @@ fn render_bytes(notebook: Notebook, cfg: BytesCfg) -> Result<String> {
 // TODO: make the panics reprint the --help text
 fn do_extract(eargs: ExtractArgs, rmdir: Option<PathBuf>) -> Result<Notebook> {
 
-    let ExtractArgs {input, output, last, format: _f, skip_lines, skip_text} = eargs;
+    let ExtractArgs {input, output, last, skip_lines, skip_text} = eargs;
 
     let notebook = match (input, last) {
 
@@ -264,24 +264,30 @@ fn main() -> Result<()> {
             draw::create_path(d_args)?;
             
         },
-        Commands::Stats(s_args) => {
-            if s_args.last {
-                let lastf = last_modified_page(&ui.rm_path.unwrap()).unwrap();
-                let cliopath = Input::new(&lastf).unwrap();
-                file_to_stats(cliopath)?;
-            }
-            else {
-                match &s_args.input {
-                    Some(file) => {
-                        file_to_stats(file.clone())?;
-                    },
-                    None => {
-                    },
-                };
             };
-            file_to_stats(s_args.input.unwrap())?;
+            let notebook = do_extract(e_args, ui.rm_path)?;
+
+
 
         },
+        //Commands::Stats(s_args) => {
+        //    if s_args.last {
+        //        let lastf = last_modified_page(&ui.rm_path.unwrap()).unwrap();
+        //        let cliopath = Input::new(&lastf).unwrap();
+        //        file_to_stats(cliopath)?;
+        //    }
+        //    else {
+        //        match &s_args.input {
+        //            Some(file) => {
+        //                file_to_stats(file.clone())?;
+        //            },
+        //            None => {
+        //            },
+        //        };
+        //    };
+        //    file_to_stats(s_args.input.unwrap())?;
+
+        //},
     };
 
     Ok(())
