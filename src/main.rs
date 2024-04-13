@@ -11,7 +11,6 @@ use rmconvert::svg::*;
 use rmconvert::util::*;
 use rmconvert::cli::*;
 use rmconvert::config::*;
-use rmconvert::draw;
 
 use svg::node::element::Path;
 
@@ -257,13 +256,20 @@ fn main() -> Result<()> {
     match ui.command {
         Commands::Extract(e_args) => {
             let notebook = do_extract(e_args.clone(), ui.rm_path)?;
-            let out_str = render(notebook, e_args.format, settings);
+            //let out_str = render(notebook, e_args.format, settings);
         },
         Commands::Draw(d_args) => {
-            //let notebook = do_extract(d_args.clone(), ui.rm_path)?;
-            draw::create_path(d_args)?;
-            
-        },
+
+
+            let e_args = ExtractArgs {
+                input: match d_args.output {
+                    None => None,
+                    Some(p) => Some(Input::try_from(p.path().clone())?),
+                },
+                output: None,
+                last: d_args.last,
+                skip_text: false,
+                skip_lines: false,
             };
             let notebook = do_extract(e_args, ui.rm_path)?;
 
