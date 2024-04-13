@@ -1,6 +1,6 @@
 #![allow(dead_code, unused_variables)]
 
-use std::io::{Write, Read, stdin, stdout};
+use std::io::{Write, Read};
 use std::path::PathBuf;
 
 use anyhow::Result;
@@ -299,108 +299,4 @@ fn main() -> Result<()> {
     Ok(())
 }
 
-
-// TODO: need to generate frontmatter, and other files? how to do this?
-// TODO: Actually as it is now this is pretty much just do_insert. Change it?
-// TODO: Create an example output file to use.
-// TODO: This is a godddamn mess
-//fn do_create(cargs: CreateArgs, rmdir: Option<PathBuf>) -> Result<Notebook> {
-//
-//    let CreateArgs {input, output, last, force} = cargs;
-//
-//    let in_svg: Vec<Line> = {
-//        // given via argument, use this one. Ignore stdin.
-//        match input {
-//            Some(inp) => {
-//                // read from inp
-//                read_svg_file(inp.path().to_path_buf()).unwrap()
-//            },
-//            None => {
-//            // try to read from stdin
-//            let mut raw = String::new();
-//            stdin().read_to_string(&mut raw).unwrap();
-//
-//            // try to parse
-//            read_svg_buffer(&raw[..]).unwrap()
-//            },
-//        }
-//    };
-//
-//    let lines = match (output, last, force) {
-//        
-//        // no output or last-modified flag; panic
-//        (None, false, _) => {
-//            Err(Error::ArgsError("No output file given.".to_string()))
-//
-//        },
-//        
-//        // last-modified flag, but without force
-//        (None, true, false) => {
-//            Err(Error::ArgsError("Can't overwrite without --force.".to_string()))
-//        },
-//
-//        // last-modified flag, with force!
-//        (None, true, true) => {
-//            if let Some(dir) = rmdir {
-//                //let lastf = last_modified_page(&dir).unwrap();
-//                //write_blocks_to_rm_file(blocks, lastf);
-//                //Ok(blocks)
-//                todo!()
-//                
-//            } else {
-//                Err(Error::ArgsError("--last given, but no RM_DIR defined.".to_string()))
-//            }
-//        },
-//
-//        // output file given, so write to it
-//        (Some( out), l, force) => {
-//            if l {
-//                eprintln!("Both --output and --last were given; ignoring --last...");
-//            };
-//
-//            // if out is an actual filepath and not stdout
-//            if out.is_local() {
-//                let is_real = out.path().exists();
-//               
-//                // save file, with "permission" if it already exists
-//                if (is_real && force) || !is_real {
-//                    let mut out_blocks = Vec::new();
-//
-//                    for line in in_svg.iter() {
-//
-//                        let mut raw_block = RawBytes::from(Block::Line(line.clone()));
-//                        out_blocks.append(&mut raw_block);
-//                    };
-//
-//                    Ok(out_blocks)
-//                }
-//
-//                // need force and don't have it! D:
-//                else {
-//                    Err(Error::ArgsError("File exists. Use --force to overwrite".to_string()))
-//                }
-//            }
-//            
-//            // if the "file" is stdout
-//            else if out.is_std() {
-//                //just dump to stdout
-//                let mut out_blocks = Vec::new();
-//
-//                for line in in_svg.iter() {
-//
-//                    let mut raw_block = RawBytes::from(Block::Line(line.clone()));
-//                    stdout().write_all(&mut raw_block).unwrap();
-//                    out_blocks.append(&mut raw_block);
-//                };
-//                Ok(out_blocks)
-//            }
-//            else {
-//                panic!("Output isn't local file or std*");
-//            }
-//        },
-//    };
-//
-//    //Ok((frontmatter, blocks))
-//    todo!()
-//}
 
