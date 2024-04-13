@@ -1,11 +1,12 @@
 
 use std::io::Write;
-use std::collections::HashMap;
 
-use svg::Document;
-use svg::node::element::Path;
-use svg::node::element::path::{Command, Data, Position, Parameters};
-use svg::parser::Event;
+mod s {
+    pub use svg::Document;
+    pub use svg::node::element::Path;
+    pub use svg::node::element::path::{Command, Data, Position, Parameters};
+    pub use svg::parser::Event;
+}
 
 use crate::types::*;
 
@@ -14,6 +15,77 @@ type Result<T> = std::result::Result<T, RMError>;
 pub const HALF_WIDTH: f32 = 702.0;
 pub const WIDTH: f32 = 1404.0;
 pub const HEIGHT: f32 = 1872.0;
+
+impl TryFrom<s::Data> for SimpleLine {
+    type Error = RMError;
+
+    fn try_from(data: s::Data) -> Result<SimpleLine> {
+        let base_line = SimpleLine::default();
+        let mut curr_position: (f32, f32) = (0.0, 0.0);
+        let mut curr_id = IdField::default();
+        let last_id = IdField::default();
+        let mut lines: Vec<SimpleLine> = Vec::new();
+
+        for cmd in data.iter() {
+            let mut line = base_line.clone();
+            line.line_id = curr_id;
+            line.last_line_id = last_id.clone();
+            curr_id = last_id.clone();
+            let pts = match cmd {
+                s::Command::Move(pos,params) => {
+                    cmd_to_xy(&mut curr_position, pos, params)
+                },
+                s::Command::Line(pos,params) => {
+                    cmd_to_xy(&mut curr_position, pos, params)
+                },
+                s::Command::CubicCurve(pos,params) => {
+                    let pts = cmd_to_xy(&mut curr_position, pos, params);
+                    cubic_to_points(
+                        pts.get(0).unwrap().clone(), 
+                        pts.get(1).unwrap().clone(), 
+                        pts.get(2).unwrap().clone(), 
+                    )
+                },
+                _ => {
+                    Err(RMError::NotImplementedError)?
+                },
+            };
+            let points: Vec<SimplePoint> = pts.into_iter().map(SimplePoint::from).collect();
+            line.points = points;
+            lines.push(line);
+        };
+        Ok(SimpleLine::default())
+    }
+}
+
+impl <'a>TryFrom<s::Event<'a>> for Line {
+    type Error = RMError;
+
+    fn try_from(event: s::Event) -> Result<Line> {
+        match event {
+            s::Event::Tag(tag, _, attributes) => {
+                if tag==svg::node::element::tag::Path {
+                    let data = attributes.get("d").ok_or(RMError::NotImplementedError)?;
+                    let data = s::Data::parse(data)?;
+                    let mut simple_line = SimpleLine::try_from(data)?;
+                    match attributes.get("transform") {
+                        None => {},
+                        Some(tfm) => {
+                            simple_line.transform(tfm)?;
+                        },
+                    };
+                    Ok(Line::from(simple_line))
+                }
+                else {
+                    Err(RMError::NotImplementedError)
+                }
+            },
+            _ => {
+                Err(RMError::NotImplementedError)
+            },
+        }
+    }
+}
 
 // TODO: make `num_points` not-magic
 pub fn cubic_to_points(p1: (f32,f32), p2: (f32, f32), pe: (f32, f32)) -> Vec<(f32,f32)> {
@@ -30,7 +102,7 @@ pub fn cubic_to_points(p1: (f32,f32), p2: (f32, f32), pe: (f32, f32)) -> Vec<(f3
     points
 }
 
-fn cmd_to_xy(curr_pos: (f32, f32), pos: &Position, params: &Parameters) -> Vec<(f32, f32)> {
+fn cmd_to_xy(curr_pos: &mut (f32, f32), pos: &s::Position, params: &s::Parameters) -> Vec<(f32, f32)> {
 
     let mut out = Vec::new();
 
@@ -38,12 +110,12 @@ fn cmd_to_xy(curr_pos: (f32, f32), pos: &Position, params: &Parameters) -> Vec<(
         let i = _i*2;
 
         let this = match pos {
-            Position::Absolute => {
+            s::Position::Absolute => {
                 let x = params.get(i).unwrap().to_owned();
                 let y = params.get(i+1).unwrap().to_owned();
                 (x,y)
             },
-            Position::Relative => {
+            s::Position::Relative => {
                 let x = curr_pos.0 + params.get(i).unwrap().to_owned();
                 let y = curr_pos.1 + params.get(i+1).unwrap().to_owned();
                 (x,y)
@@ -52,105 +124,28 @@ fn cmd_to_xy(curr_pos: (f32, f32), pos: &Position, params: &Parameters) -> Vec<(
 
         out.push(this);
     };
+    match out.last() {
+        None => {},
+        Some(last) => {
+            _ = std::mem::replace(curr_pos, last.to_owned());
+        },
+    };
     out
 }
 
-pub fn svg_path_to_lines(data: Data, attrs: HashMap<String,svg::node::Value>, start_id: IdField, prev_id: IdField) -> Result<Vec<Line>>
-{
-    let base_line = Line {
-        layer_id: IdField([0x00, 0x0b, 0x00]), 
-        line_id: IdField([0x00, 0x00, 0x00]),
-        last_line_id: IdField([0x00, 0x00, 0x00]),
-        id_field_0: IdField([0x00, 0x00, 0x00]), 
-        pen_type: Some(17),
-        color: Some(0),
-        brush_size: Some(2.0),
-        points: Vec::new(),
-    };
 
-    let mut curr_position: (f32, f32) = (0.0, 0.0);
-    let mut curr_id = start_id;
-    let mut last_id = prev_id;
-    let mut lines: Vec<Line> = Vec::new(); //my Line, not svg::_::Line
-
-    for cmd in data.iter() {
-
-        let mut pts = Vec::new();
-        let mut line = base_line.clone();
-
-        match cmd {
-            Command::Move(pos,params) => {
-                pts = cmd_to_xy(curr_position, pos, params);
-            },
-            Command::Line(pos,params) => {
-                pts = cmd_to_xy(curr_position, pos, params);
-            },
-            Command::CubicCurve(pos,params) => {
-                pts = cmd_to_xy(curr_position, pos, params);
-                pts = cubic_to_points(
-                    pts.get(0).unwrap().clone(), 
-                    pts.get(1).unwrap().clone(), 
-                    pts.get(2).unwrap().clone(), 
-                    );
-            },
-            _ => {},
-        };
-        
-        match attrs.get("transform") {
-            None => {},
-            Some(tfm) => {
-                let tfm = tfm.strip_prefix("matrix(").unwrap();
-                let tfm = tfm.trim_end_matches(")");
-                let mut coeffs = Vec::new();
-                for coeff in tfm.split(",") {
-                    coeffs.push(coeff.trim_start().parse::<f32>().unwrap());
-                };
-
-                pts = pts.iter().map(|(_x, _y)| {
-                    let x = coeffs.get(0).unwrap() * _x  + coeffs.get(2).unwrap() * _y + coeffs.get(4).unwrap();
-                    let y = coeffs.get(1).unwrap() * _x  + coeffs.get(3).unwrap() * _y + coeffs.get(5).unwrap();
-                    (x,y)
-                }).collect();
-            },
-        };
-
-        curr_position = pts.last().unwrap().clone();
-
-        for (x,y) in pts.iter() {
-            let point = Point {
-                x: x.clone()-HALF_WIDTH,
-                y: y.clone(),
-                speed: 1,
-                width: 16,
-                direction: 0,
-                pressure: 22,
-            };
-
-            line.points.push(point);
-        };
-
-        lines.push(line);
-
-        curr_position = pts.last().unwrap().clone();
-    };
-
-    Ok(lines)
-}
-
-
-/// RMConvert::Line into an svg::Path
-pub fn path_from_line(line: &Line) -> Option<Path> {
+pub fn path_from_line(line: &Line) -> Option<s::Path> {
     let mut points = line.points.clone().into_iter();
     let Point{x:start_x, y:start_y,..} = points.next()?;
 
-    let mut data = Data::new().move_to((start_x+HALF_WIDTH, start_y));
+    let mut data = s::Data::new().move_to((start_x+HALF_WIDTH, start_y));
 
     for Point {x,y,..} in points {
         data = data.line_to((x+HALF_WIDTH, y));
     };
 
     Some(
-        Path::new()
+        s::Path::new()
         .set("fill", "none")
         .set("stroke", "black")
         .set("stroke-width", 3)
@@ -158,27 +153,27 @@ pub fn path_from_line(line: &Line) -> Option<Path> {
     )
 }
 
-pub fn create_border_path() -> Path {
+pub fn create_border_path() -> s::Path {
     let data = 
-        Data::new()
+        s::Data::new()
         .move_to((0,0))
         .line_to((WIDTH, 0.0))
         .line_to((WIDTH, HEIGHT))
         .line_to((0.0, HEIGHT))
         .close();
 
-    Path::new()
+    s::Path::new()
         .set("fill", "none")
         .set("stroke", "gray")
         .set("stroke-width", 1)
         .set("d", data)
 }
 
-fn prepare_svg<I>(paths: I) -> Document
-    where I: IntoIterator<Item=Path>
+fn prepare_svg<I>(paths: I) -> s::Document
+    where I: IntoIterator<Item=s::Path>
 {
     let margin = 0.0; //50.0;
-    let mut document = Document::new()
+    let mut document = s::Document::new()
         .set("viewBox", (-margin, -margin, WIDTH+margin, HEIGHT+margin));
     
     for p in paths {
@@ -188,7 +183,7 @@ fn prepare_svg<I>(paths: I) -> Document
 }
 
 pub fn write_svg<I, T>(paths: I, filepath: T) -> std::io::Result<()> 
-    where I: IntoIterator<Item=Path>,
+    where I: IntoIterator<Item=s::Path>,
           T: AsRef<std::path::Path>,
 {
     let document = prepare_svg(paths);
@@ -197,7 +192,7 @@ pub fn write_svg<I, T>(paths: I, filepath: T) -> std::io::Result<()>
 }
 
 pub fn write_svg_to_stdout<I>(paths: I) -> std::io::Result<()> 
-    where I: IntoIterator<Item=Path>
+    where I: IntoIterator<Item=s::Path>
 {
     let document = prepare_svg(paths);
     let out_bytes = document.to_string().into_bytes();
@@ -218,7 +213,11 @@ pub fn read_svg_file<P: AsRef<std::path::Path>>(filepath: P) -> Result<Vec<Line>
             return Err(RMError::IoError(error))
         },
     };
-    parse_svg_to_lines(events, IdField([0x00,0x00,0x00]), IdField([0x00,0x00,0x00]))
+    let mut lines = Vec::new();
+    for event in events {
+        lines.push(Line::try_from(event)?);
+    };
+    Ok(lines)
 }
 
 pub fn read_svg_buffer<'a>(svg_buf: &str) -> Result<Vec<Line>> {
@@ -231,31 +230,11 @@ pub fn read_svg_buffer<'a>(svg_buf: &str) -> Result<Vec<Line>> {
         },
     };
 
-    parse_svg_to_lines(events, IdField([0x00,0x00,0x00]), IdField([0x00,0x00,0x00]))
-    
-}
-
-fn parse_svg_to_lines<'a, I>(svg_events: I, start_id: IdField, prev_id: IdField) -> Result<Vec<Line>> 
-    where I: IntoIterator<Item=Event<'a>>,
-{
-    let mut lines: Vec<Line> = Vec::new(); //my Line, not svg::_::Line
-
-    for event in svg_events {
-        match event {
-            Event::Tag(tag, _, attributes) => {
-                if tag!="path" {
-                    continue;
-                };
-                let data = attributes.get("d").unwrap();
-                let data = Data::parse(data).unwrap();
-
-                let mut line = svg_path_to_lines(data, attributes, start_id.clone(), prev_id.clone())?;
-                lines.append(&mut line);
-
-            },
-            _ => {},
-            };
-        };
+    let mut lines = Vec::new();
+    for event in events {
+        lines.push(Line::try_from(event)?);
+    };
     Ok(lines)
+    
 }
 

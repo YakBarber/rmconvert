@@ -8,6 +8,10 @@ use serde::Serialize;
 use nom::HexDisplay;
 use thiserror;
 
+type Result<T> = std::result::Result<T, RMError>;
+
+pub const HALF_WIDTH: f32 = 702.0;
+
 #[derive(thiserror::Error, Debug)]
 pub enum RMError {
     #[error("Bad arguments: {0}")]
@@ -16,7 +20,7 @@ pub enum RMError {
     #[error("Can't parse: {}", .0.to_hex(.1.clone()))]
     ParseError(Vec<u8>, usize),
 
-    #[error("SVG parsing error: {}", .0)]
+    #[error("SVG parsing error: {0}")]
     SvgError(#[from] svg::parser::Error),
 
     #[error("Something bad happened")]
@@ -27,6 +31,9 @@ pub enum RMError {
 
     #[error("Error with config")]
     ConfigError(config::ConfigError),
+
+    #[error("Functionality not yet implemented")]
+    NotImplementedError,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -69,6 +76,22 @@ pub struct Frontmatter {
 }
 
 #[derive(Debug, Clone, Serialize, Default)]
+pub struct SimpleLine {
+   pub layer_id: IdField, 
+   pub line_id: IdField, 
+   pub last_line_id: IdField, 
+   pub id_field_0: IdField, 
+   pub points: Vec<SimplePoint>,
+}
+
+#[allow(dead_code, unused_variables)]
+impl SimpleLine {
+    pub fn transform(&mut self, commands: &str) -> Result<()> {
+        Err(RMError::NotImplementedError)
+    }
+}
+
+#[derive(Debug, Clone, Serialize)]
 pub struct Line {
    pub layer_id: IdField, 
    pub line_id: IdField, 
@@ -80,6 +103,81 @@ pub struct Line {
    pub points: Vec<Point>,
 }
 
+#[allow(dead_code, unused_variables)]
+impl Line {
+    pub fn transform(&mut self, commands: &str) -> Result<()> {
+        Err(RMError::NotImplementedError)
+        //let tfm = tfm.strip_prefix("matrix(").unwrap();
+        //let tfm = tfm.trim_end_matches(")");
+        //let mut coeffs = Vec::new();
+        //for coeff in tfm.split(",") {
+        //    coeffs.push(coeff.trim_start().parse::<f32>().unwrap());
+        //};
+
+        //pts = pts.iter().map(|(_x, _y)| {
+        //    let x = coeffs.get(0).unwrap() * _x  + coeffs.get(2).unwrap() * _y + coeffs.get(4).unwrap();
+        //    let y = coeffs.get(1).unwrap() * _x  + coeffs.get(3).unwrap() * _y + coeffs.get(5).unwrap();
+        //    (x,y)
+        //}).collect();
+    }
+}
+
+impl From<SimpleLine> for Line {
+    fn from(line: SimpleLine) -> Self {
+        let mut out = Line::default();
+        out.layer_id = line.layer_id;
+        out.line_id = line.line_id;
+        out.last_line_id = line.last_line_id;
+        out.id_field_0 = line.id_field_0;
+        out.points = line.points.into_iter().map(Point::from).collect();
+        out
+    }
+
+}
+
+impl Default for Line {
+    fn default() -> Line {
+        Line {
+            layer_id: IdField([0x00, 0x0b, 0x00]), 
+            line_id: IdField::default(),
+            last_line_id: IdField::default(),
+            id_field_0: IdField::default(),
+            pen_type: Some(17),
+            color: Some(0),
+            brush_size: Some(2.0),
+            points: Vec::new(),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Default)]
+pub struct SimplePoint {
+    pub x: f32,
+    pub y: f32,
+}
+
+impl SimplePoint {
+    pub fn to_point(&self, speed: u8, width: u8, direction: u8, pressure: u8) -> Point {
+        Point {
+            x: self.x,
+            y: self.y,
+            speed,
+            width,
+            direction,
+            pressure,
+        }
+    }
+}
+
+impl From<(f32,f32)> for SimplePoint {
+    fn from((x,y): (f32,f32)) -> Self {
+        SimplePoint {
+            x: x.clone()-HALF_WIDTH,
+            y: y.clone(),
+        }
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Default)]
 pub struct Point {
     pub x: f32,
@@ -88,6 +186,15 @@ pub struct Point {
     pub width: u8,
     pub direction: u8,
     pub pressure: u8,
+}
+
+impl From<SimplePoint> for Point {
+    fn from(point: SimplePoint) -> Self {
+        let mut out = Point::default();
+        out.x = point.x;
+        out.y = point.y;
+        out
+    }
 }
 
 #[derive(Debug, Clone, Serialize)]
