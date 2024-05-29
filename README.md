@@ -14,37 +14,57 @@ Watch this space for updates. Happy to accept pull requests!
 
 Here are the current progress and targets. This plan will be further refined.
 
-- [x] Implement `nom` parser for all structs
-- [ ] SVG writing
-    - [x] **Simple lines**
-    - [ ] **Dynamic brush types**
-    - [ ] **Line width**
-    - [ ] **Color**
-    - [ ] **Text**
-    - [ ] **Templates(?)**
-- [ ] SVG reading
-    - [x] **Path M command**
-    - [x] **Path L command**
-    - [x] **Path C command**
-    - [ ] **transforms**
-        - [x] **matrix**
-        - [ ] **???**
-    - [ ] **Circles**
-    - [ ] **Rectangles**
-    - [ ] **Text**
+- [x] **Parser for internal structs** - _all structures in RM files can be read into some `rmconvert::types` type_
+    - [x] Lines
+    - [x] Text
 
+- [ ] Tests
+    - [X] RM parser
+    - [ ] RM writer
+    - [ ] SVG parser
+    - [ ] SVG writer
+    - [ ] Drawing creation
+    - [ ] integration
+    - [ ] CLI
 
-- [ ] Extraction
-    - [x] Lines to internal structs
-    - [x] Text to internal structs
-    - [ ] Output JSON
-- [ ] Creation
-- [ ] **Insertion**: Via the API only as of 2024.01.05
+- [ ] **Docs** - _The Forever Todo_
 
+- [ ] **Config file format**
+
+- [ ] **SVG write support**
+    - [x] Simple lines
+    - [ ] Brush types
+    - [ ] Line width
+    - [ ] Color
+    - [ ] Text
+    - [ ] Templates(?)
+
+- [ ] **SVG read support**
+    - [x] Path M command
+    - [x] Path L command
+    - [x] Path C command
+    - [ ] transforms
+        - [x] matrix
+        - [ ] ??? - _there are others_
+    - [ ] Circles
+    - [ ] Rectangles
+    - [ ] Text
+
+- [ ] **RM write support**
+    - [X] Data insertion - _can draw on an existing page_
+    - [ ] Page insertion - _can create a new page in existing notebook_
+    - [ ] Notebook creation - _can create a new notebook, incl metadata_
+    - [x] Simple lines
+    - [ ] Brush types
+    - [ ] Line width
+    - [ ] Color
+    - [ ] Text
+    - [ ] Text with formatting
+
+- [ ] **Output JSON**
 
 - [ ] **More flexible notebook access**
 - [ ] **`.metadata` reading/parsing**: currently only used to find modified time
 - [ ] **`.content` reading/parsing**
 - [ ] **`.pagefile` reading/parsing**
-- [ ] **More docs**: The Forever Todo
 
