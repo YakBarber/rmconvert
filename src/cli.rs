@@ -59,6 +59,11 @@ pub struct ExtractArgs {
     #[arg(short, long, group = "inargs")]
     pub last: bool,
 
+    /// Add a line to the SVG marking the limits of the RM screen
+    #[clap(value_parser)]
+    #[arg(long)]
+    pub border: bool,
+
     //#[arg(short='t', long, default_value="debug")]
     //pub format: OutputFormat,
 
@@ -71,45 +76,55 @@ pub struct ExtractArgs {
 
 #[derive(Debug, Args)]
 pub struct DrawArgs {
+
+    #[command(flatten)]
+    pub target: DrawTarget,
+
+    #[command(flatten)]
+    pub input: DrawInput,
+
+    #[arg(long)]
+    pub width: Option<String>,
+
+    #[arg(long)]
+    pub pen: Option<String>,
+
+    #[arg(long)]
+    pub layer: Option<String>,
+
+    #[arg(long)]
+    pub color: Option<String>,
+}
+
+#[derive(Debug, Args)]
+#[group(required = true, multiple = true)]
+pub struct DrawInput {
+    /// Draw from an SVG file
+    #[arg(long, group="ginput")]
+    pub svg: Option<Input>,
+
+    /// Draw from a supplied SVG path command
+    #[arg(long)]
+    pub path: Option<String>,
+
+    /// Draw text
+    #[arg(long)]
+    pub text: Option<String>,
+}
+
+#[derive(Debug, Args)]
+#[group(required = true, multiple = false)]
+pub struct DrawTarget {
     /// reMarkable file to target.
-    #[clap(value_parser)]
-    #[arg(short,long, group="gtarget")]
+    #[arg(short,long)]
     pub output: Option<Output>,
     
     /// Attempt to target the last opened reMarkable page file (slow). 
     /// Will fail if no file can be found.
-    #[clap(value_parser)]
-    #[arg(short,long, group="gtarget")]
+    #[arg(short,long)]
     pub last: bool,
-
-    #[clap(value_parser)]
-    #[arg(long)]
-    pub svg: Option<Input>,
-
-    #[clap(value_parser)]
-    #[arg(long)]
-    pub svg_path: Option<String>,
-
-    #[clap(value_parser)]
-    #[arg(long)]
-    pub text: Option<String>,
-
-    #[clap(value_parser)]
-    #[arg(long)]
-    pub width: Option<String>,
-
-    #[clap(value_parser)]
-    #[arg(long)]
-    pub pen: Option<String>,
-
-    #[clap(value_parser)]
-    #[arg(long)]
-    pub layer: Option<String>,
-
-    #[clap(value_parser)]
-    #[arg(long)]
-    pub color: Option<String>,
 }
+
 
 #[derive(Debug, Parser)]
 pub struct Cli {

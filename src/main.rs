@@ -1,7 +1,9 @@
-#![allow(dead_code, unused_variables)]
+#![allow(dead_code, unused_variables, unused_imports)]
 
-use std::io::{Write, Read};
+
+use std::io::{Write, Read, BufRead};
 use std::path::PathBuf;
+use std::str::FromStr;
 
 use anyhow::Result;
 
@@ -124,7 +126,7 @@ fn render_bytes(notebook: Notebook, cfg: BytesCfg) -> Result<String> {
 // TODO: make the panics reprint the --help text
 fn do_extract(eargs: ExtractArgs, rmdir: Option<PathBuf>) -> Result<Notebook> {
 
-    let ExtractArgs {input, output, last, skip_lines, skip_text} = eargs;
+    let ExtractArgs {input, output, last, skip_lines, skip_text, border} = eargs;
 
     let notebook = match (input, last) {
 
@@ -249,30 +251,50 @@ fn main() -> Result<()> {
 
     env_logger::init();
 
-    // TODO: remove this method entirely, replace with Settings::new()
-    let ui = Cli::parse();
+    let cli = Cli::parse();
+
     let settings = Settings::new()?;
 
-    match ui.command {
+    match cli.command {
         Commands::Extract(e_args) => {
-            let notebook = do_extract(e_args.clone(), ui.rm_path)?;
+            let notebook = do_extract(e_args.clone(), cli.rm_path)?;
             //let out_str = render(notebook, e_args.format, settings);
         },
         Commands::Draw(d_args) => {
 
-
             let e_args = ExtractArgs {
-                input: match d_args.output {
+                input: match d_args.target.output {
                     None => None,
                     Some(p) => Some(Input::try_from(p.path().clone())?),
                 },
                 output: None,
-                last: d_args.last,
+                last: d_args.target.last,
                 skip_text: false,
                 skip_lines: false,
+                border: false,
             };
-            let notebook = do_extract(e_args, ui.rm_path)?;
+            let mut notebook = do_extract(e_args, cli.rm_path)?;
 
+            // file/stdin, then path. text is separate but comes last
+            if let Some(mut svg) = d_args.input.svg {
+                // load svg file into Blocks and add to notebook
+                let mut raw = String::new();
+                svg.lock().read_to_string(&mut raw)?;
+                let lines = read_svg_buffer(&raw[..])?;
+                let mut blocks = lines.into_iter().map(|l| Block::Line(l)).collect();
+                notebook.blocks.append(&mut blocks);
+            };
+            if let Some(path) = d_args.input.path {
+                // stick in a Data and do a ::from, then add to notebook
+                Err(RMError::NotImplementedError)?
+            };
+            if let Some(text) = d_args.input.text {
+                // ???
+                Err(RMError::NotImplementedError)?
+            };
+
+            //write notebook back to file
+            write_blocks_to_rm_file(notebook, PathBuf::from_str("/home/barry/whatever.rm")?)?;
 
 
         },
@@ -298,5 +320,7 @@ fn main() -> Result<()> {
 
     Ok(())
 }
+
+
 
 
